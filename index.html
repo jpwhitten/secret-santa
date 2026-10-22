@@ -660,6 +660,47 @@
   .lamp .base { position: absolute; bottom: 0; left: 22px; width: 62px; height: 12px; border-radius: 6px 6px 3px 3px; background: linear-gradient(#e0bb5a, #a8873a); }
   .lamp .glow { position: absolute; top: 36px; left: -30px; width: 160px; height: 110px; background: radial-gradient(ellipse at 50% 0%, rgba(255, 220, 140, .55), transparent 70%); pointer-events: none; }
 
+  /* Guided first visit: one festive card per step */
+  .onboard { position: fixed; z-index: 12; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(6, 12, 30, .74); }
+  .onboard.open { display: flex; }
+  .ob-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: min(480px, 100%);
+    max-height: 92vh;
+    max-height: 92dvh;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #fffaf0;
+    color: #1f2937;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .6);
+    animation: card-in .4s cubic-bezier(.2, 1.3, .4, 1);
+  }
+  .ob-card .stripe { flex: none; height: 10px; background: repeating-linear-gradient(-45deg, #dc2626 0 10px, #fff 10px 20px); }
+  .ob-close { position: absolute; top: 18px; right: 12px; }
+  .ob-progress { display: flex; flex-wrap: wrap; justify-content: center; gap: 5px; padding: 18px 56px 0; }
+  .ob-progress i { width: 8px; height: 8px; border-radius: 50%; background: #e2cf94; }
+  .ob-progress i.on { background: var(--red); }
+  .ob-body { flex: 1; overflow-y: auto; padding: 16px 22px 8px; text-align: center; }
+  .ob-body h3 { margin: 4px 0 10px; font-family: var(--festive); font-size: 34px; line-height: 1.1; color: var(--red); }
+  .ob-icon { font-size: 52px; line-height: 1.1; }
+  .ob-tier { margin-top: 10px; font: bold 11px Arial, Helvetica, sans-serif; letter-spacing: 2px; text-transform: uppercase; color: #8a6d4a; }
+  .ob-q { margin: 6px 0 18px; font: 700 30px/1.1 'Caveat', cursive; color: #1f2937; }
+  .ob-text { margin: 0 0 12px; font-size: 16px; line-height: 1.45; color: #4b5563; }
+  .ob-hint { margin: 14px 0 0; font-size: 13px; font-style: italic; color: #8a6d4a; }
+  .ob-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ob-choice { padding: 14px 10px; border: 2px solid #e2cf94; border-radius: 12px; background: #fff; color: #1f2937; font: 16px Georgia, serif; cursor: pointer; }
+  .ob-choice[aria-pressed="true"] { border-color: var(--red); background: #fef2f2; box-shadow: 0 0 0 3px rgba(185, 28, 28, .15); }
+  .ob-input { width: 100%; padding: 14px; border: 2px solid #e2cf94; border-radius: 12px; background: #fff; color: #1f2937; font: 18px Georgia, serif; text-align: center; }
+  .ob-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, .25); }
+  .ob-body .items { text-align: left; }
+  .ob-nav { display: flex; align-items: center; gap: 8px; padding: 12px 22px 18px; }
+  .ob-back, .ob-skip { padding: 8px; border: 0; background: none; color: #6b7280; font: 15px Georgia, serif; cursor: pointer; }
+  .ob-next { flex: 1; width: auto; }
+  .reveal-actions .tag-btn + .tag-btn { margin-top: 4px; }
+  @keyframes card-in { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: none; } }
+
   /* Manila case-file folder for the fact file, leaderboard and rules */
   .case-modal { position: fixed; z-index: 11; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(10, 5, 2, .62); }
   .case-modal.open { display: flex; }
@@ -1369,6 +1410,7 @@
         <div class="details" id="details"></div>
       </div>
       <div class="reveal-actions">
+        <button class="tag-btn" id="joinGame" type="button" hidden><span class="tag-face"><span class="hole"></span>&#128269; Join Santa Sleuth</span></button>
         <button class="tag-btn" id="seeWish" type="button" hidden><span class="tag-face"><span class="hole"></span><span id="seeWishLabel">See their wishlist</span></span></button>
         <button class="link-btn" id="again" type="button">&#8634; Wrap it back up</button>
       </div>
@@ -1501,9 +1543,23 @@
   </div>
 </div>
 
+<div class="onboard" id="onboard" role="dialog" aria-modal="true" aria-labelledby="obTitle">
+  <div class="ob-card">
+    <div class="stripe"></div>
+    <button class="close ob-close" id="obClose" type="button" aria-label="Finish later">&times;</button>
+    <div class="ob-progress" id="obProgress"></div>
+    <div class="ob-body" id="obBody"></div>
+    <div class="ob-nav">
+      <button class="ob-back" id="obBack" type="button">&larr; Back</button>
+      <button class="ob-skip" id="obSkip" type="button">Skip</button>
+      <button class="big-btn ob-next" id="obNext" type="button">Next &rarr;</button>
+    </div>
+  </div>
+</div>
+
 <template id="rulesTpl">
   <ol class="rules-list">
-    <li><strong>Find your Santa.</strong> Five of your Santa's fact-file answers get pinned to your board as clues on <span class="rule-dates"></span>.</li>
+    <li><strong>Find your Santa.</strong> Five of your Santa's fact-file answers get pinned to your board as clues on <span class="rule-dates"></span> &mdash; and they get sharper as Christmas gets closer.</li>
     <li><strong>You have 10 pins.</strong> Stick them in suspects &mdash; all on one, or spread them. Your Prime Suspect is whoever has the most.</li>
     <li><strong>Lock pins in whenever you like.</strong> Each batch keeps the multiplier from the moment you lock it: &times;3 before clue 1, then &times;2.5, &times;2, &times;1.5, &times;1.2 and &times;1 after clue 5. Locked pins turn gold and can't move. Pins never locked count &times;0.5.</li>
     <li><strong>Hedge your bets:</strong> lock a hunch early for big points, and keep some pins back for when the clues firm up.</li>
@@ -1910,6 +1966,7 @@
     $("tabTheirs").textContent = `\u{1F381} ${match.r}'s list`;
     $("seeWishLabel").textContent = `See ${match.r}'s wishlist`;
     $("seeWish").hidden = false;
+    if (typeof onboardingNeeded === "function" && onboardingNeeded()) $("joinGame").hidden = false;
     renderTheirs();
     loadTheirs();
   }
@@ -1954,15 +2011,19 @@
   // ---------- Santa Sleuth (guess-your-Santa game) ----------
   // The server works out the clues (from the pairings it holds), enforces the dates and token rules,
   // and only scores the game once the host runs `SecretSanta.py --reveal`.
+  // The fact file. Questions come in five tiers of two (q1+q2 = tier 1 ... q9+q10 = tier 5): clue n is one
+  // question from tier n, so clues get sharper through December. To reword a question, just edit it here.
   const QUESTIONS = [
-    { id: "q1", icon: "\u2615", text: "Tea, coffee, or neither?", options: ["Tea", "Coffee", "Both", "Neither"] },
-    { id: "q2", icon: "\u{1F3AC}", text: "Your go-to Christmas film?" },
-    { id: "q3", icon: "\u{1F9B4}", text: "Ever broken a bone? Which?", placeholder: "e.g. No / Left wrist" },
-    { id: "q4", icon: "\u{1F96C}", text: "Brussels sprouts?", options: ["Love them", "Hate them", "Tolerate them"] },
-    { id: "q5", icon: "\u{1F30D}", text: "The furthest place you've been?" },
-    { id: "q6", icon: "\u{1F9F8}", text: "Something you were obsessed with as a kid?" },
-    { id: "q7", icon: "\u2B50", text: "A hidden talent?" },
-    { id: "q8", icon: "\u{1F384}", text: "Real tree or fake tree?", options: ["Real", "Fake", "No tree!"] },
+    { id: "q1", tier: 1, icon: "\u{1F381}", text: "Your present wrapping style?", options: ["Neat and tidy", "Chaotic", "Gift bags all the way"] },
+    { id: "q2", tier: 1, icon: "\u{1F6CD}\u{FE0F}", text: "When do you start your Christmas shopping?", options: ["Summer", "November", "December", "Christmas Eve panic"] },
+    { id: "q3", tier: 2, icon: "\u{1F451}", text: "The cracker paper hat\u2026", options: ["Always on", "On for a bit", "Never"] },
+    { id: "q4", tier: 2, icon: "\u{1F967}", text: "Mince pies or Christmas pudding?", options: ["Mince pies", "Christmas pudding", "Both", "Neither"] },
+    { id: "q5", tier: 3, icon: "\u{1F36B}", text: "Your favourite from the Quality Street or Celebrations tin?", placeholder: "e.g. The Purple One" },
+    { id: "q6", tier: 3, icon: "\u{1F3AC}", text: "Your must-watch Christmas film?", placeholder: "e.g. Elf" },
+    { id: "q7", tier: 4, icon: "\u2B50", text: "Your part in a school nativity play?", placeholder: "e.g. Third sheep \u2014 or \u201cnever in one\u201d" },
+    { id: "q8", tier: 4, icon: "\u{1F9F8}", text: "The best present you got as a kid?", placeholder: "e.g. A Game Boy" },
+    { id: "q9", tier: 5, icon: "\u{1F62C}", text: "The worst present you've ever received?", placeholder: "e.g. A single sock" },
+    { id: "q10", tier: 5, icon: "\u{1F525}", text: "Your most legendary Christmas mishap?", placeholder: "e.g. Set the pudding on fire" },
   ];
   const QUESTION_TEXT = Object.fromEntries(QUESTIONS.map((q) => [q.id, q.text]));
   const MULTIPLIERS = [3, 2.5, 2, 1.5, 1.2, 1];  // by clues released when you lock in
@@ -2469,7 +2530,7 @@
       const lastDay = fmtDate(new Date(new Date(d.facts_lock) - 1).toISOString());
       body.append(el("p", { className: "note-text", textContent: d.facts_locked
         ? "Fact files are locked \u2014 your answers are now your giftee's clues."
-        : `Answer honestly: 5 of these become clues for whoever you're buying for. You can change them until the end of ${lastDay}. Answer all 8 to earn stealth points.` }));
+        : `Answer honestly: 5 of these become clues for whoever you're buying for. You can change them until the end of ${lastDay}. Answer all 10 to earn stealth points.` }));
       const form = el("form", { className: "facts", id: "factsForm" });
       for (const q of QUESTIONS) {
         const value = d.my_facts[q.id] || "";
@@ -2575,7 +2636,7 @@
     try {
       sleuth.data.my_facts = await rpc("santa_set_facts", { p_year: year, p_name: match.g, p_token: match.k, p_answers: answers });
       const blanks = Object.values(answers).filter((a) => !a).length;
-      setStatus("factsStatus", blanks ? `Saved \u2713 \u2014 answer the other ${blanks} to earn stealth points.` : "Saved \u2713 All 8 answered \u2014 nice!");
+      setStatus("factsStatus", blanks ? `Saved \u2713 \u2014 answer the other ${blanks} to earn stealth points.` : "Saved \u2713 All 10 answered \u2014 nice!");
     } catch (err) {
       setStatus("factsStatus", friendlyError(err), true);
     }
@@ -2603,6 +2664,170 @@
     }
   }
 
+  // ---------- Guided first visit ----------
+  // Walks a new player through whatever they haven't done yet: the questions (one card each, saved as
+  // they go), their avatar, a few wishlist ideas, then into the office.
+  const ob = { steps: [], i: 0, answers: {} };
+
+  function onboardingNeeded() {
+    const d = sleuth.data;
+    if (!d) return false;
+    const factsDone = QUESTIONS.every((q) => d.my_facts[q.id]);
+    return (!factsDone && !d.facts_locked) || !(d.avatars || {})[match.g];
+  }
+
+  function startOnboarding() {
+    const d = sleuth.data;
+    ob.answers = { ...d.my_facts };
+    ob.steps = [{ type: "intro" }];
+    if (!d.facts_locked && !QUESTIONS.every((q) => d.my_facts[q.id])) ob.steps.push(...QUESTIONS.map((q) => ({ type: "question", q })));
+    if (!(d.avatars || {})[match.g]) ob.steps.push({ type: "avatar" });
+    if (!wish.mine.length) ob.steps.push({ type: "wishlist" });
+    ob.steps.push({ type: "done" });
+    ob.i = 0;
+    closeCase();
+    $("caseBody").replaceChildren();  // the avatar builder reuses element ids, so make sure there's only one
+    $("onboard").classList.add("open");
+    renderOnboarding();
+  }
+
+  function renderOnboarding() {
+    const step = ob.steps[ob.i];
+    const body = $("obBody");
+    body.replaceChildren();
+    $("obProgress").replaceChildren(...ob.steps.map((_, n) => el("i", { className: n <= ob.i ? "on" : "" })));
+    $("obBack").hidden = ob.i === 0 || step.type === "done";
+    $("obSkip").hidden = !["question", "wishlist"].includes(step.type);
+    const next = (label) => { $("obNext").textContent = label; };
+
+    if (step.type === "intro") {
+      body.append(
+        el("div", { className: "ob-icon", textContent: "\u{1F50D}" }),
+        el("h3", { id: "obTitle", textContent: "Welcome to Santa Sleuth" }),
+        el("p", { className: "ob-text", textContent: "Somebody is buying you a present\u2026 but who? Through December you'll get clues about your Santa \u2014 and whoever you're buying for gets clues about you." }),
+        el("p", { className: "ob-text", textContent: "Setting up takes about 3 minutes: a few Christmas questions, your avatar, and some gift ideas." }));
+      next("Let's go \u2192");
+    } else if (step.type === "question") {
+      const q = step.q;
+      body.append(
+        el("div", { className: "ob-icon", textContent: q.icon }),
+        el("div", { className: "ob-tier", textContent: `Could become clue ${q.tier} of 5` }),
+        el("div", { className: "ob-q", id: "obTitle", textContent: q.text }));
+      if (q.options) {
+        const grid = el("div", { className: "ob-choices" });
+        for (const option of q.options) {
+          const button = el("button", { className: "ob-choice", type: "button", textContent: option });
+          button.setAttribute("aria-pressed", String(ob.answers[q.id] === option));
+          button.addEventListener("click", () => {
+            ob.answers[q.id] = option;
+            play("note", 659.25);
+            renderOnboarding();
+          });
+          grid.append(button);
+        }
+        body.append(grid);
+      } else {
+        const input = el("input", { className: "ob-input", value: ob.answers[q.id] || "", maxLength: 80, placeholder: q.placeholder || "", autocomplete: "off" });
+        input.setAttribute("aria-label", q.text);
+        input.addEventListener("input", () => { ob.answers[q.id] = input.value; });
+        input.addEventListener("keydown", (e) => { if (e.key === "Enter") obNext(); });
+        body.append(input);
+        setTimeout(() => input.focus(), 50);
+      }
+      body.append(el("p", { className: "ob-hint", textContent: "Be honest \u2014 this could end up pinned to someone's corkboard!" }));
+      next("Next \u2192");
+    } else if (step.type === "avatar") {
+      sleuth.avatarDraft = cleanAvatar((sleuth.data.avatars || {})[match.g]);
+      const surprise = el("button", { className: "big-btn av-random", type: "button", textContent: "\u{1F3B2} Surprise me" });
+      surprise.addEventListener("click", () => {
+        const any = (list) => list[Math.floor(Math.random() * list.length)];
+        sleuth.avatarDraft = { b: any(AVATAR.bases)[0], h: any(AVATAR.hats)[0], k: any(AVATAR.skins), s: any(AVATAR.scarves), g: any(AVATAR.backgrounds) };
+        renderAvatarKit();
+      });
+      body.append(
+        el("h3", { id: "obTitle", textContent: "Pick your disguise" }),
+        el("p", { className: "ob-text", textContent: "This is you on everyone's suspect board." }),
+        el("div", { className: "polaroid av-preview", id: "avPreview" }),
+        el("div", { id: "avOptions", style: "text-align:left" }),
+        surprise,
+        el("p", { className: "status", id: "avatarStatus" }));
+      renderAvatarKit();
+      next("Save & next \u2192");
+    } else if (step.type === "wishlist") {
+      const list = el("ul", { className: "items", id: "obWish" });
+      const input = el("input", { className: "ob-input", maxLength: 200, placeholder: "e.g. Fluffy socks, size 9", autocomplete: "off" });
+      input.setAttribute("aria-label", "New wishlist idea");
+      const add = () => {
+        const value = input.value.trim();
+        if (!value || wish.mine.length >= MAX_ITEMS) return;
+        wish.mine.push(value);
+        input.value = "";
+        saveMine();
+        renderMine();
+        drawObWish();
+      };
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+      const addButton = el("button", { className: "big-btn", type: "button", textContent: "Add idea", style: "margin-top:10px" });
+      addButton.addEventListener("click", add);
+      body.append(
+        el("div", { className: "ob-icon", textContent: "\u{1F4DD}" }),
+        el("h3", { id: "obTitle", textContent: "Help your Santa out" }),
+        el("p", { className: "ob-text", textContent: "Add a few gift ideas \u2014 your Santa sees them straight away, and you can change them any time." }),
+        list, input, addButton);
+      drawObWish();
+      next("Next \u2192");
+    } else {
+      body.append(
+        el("div", { className: "ob-icon", textContent: "\u{1F389}" }),
+        el("h3", { id: "obTitle", textContent: "You're all set, detective!" }),
+        el("p", { className: "ob-text", textContent: `Clues about your Santa start on ${fmtDate(sleuth.data.clue_dates[0])}. Pop into the office any time to pin your suspects \u2014 and try cracking everyone else's Santa on the Family Map.` }));
+      next("Step into the office \u2192");
+    }
+  }
+
+  function drawObWish() {
+    const list = $("obWish");
+    if (!list) return;
+    list.replaceChildren(...wish.mine.map((item, i) => {
+      const remove = el("button", { className: "remove", type: "button", textContent: "\u00d7" });
+      remove.setAttribute("aria-label", `Remove ${item}`);
+      remove.addEventListener("click", () => {
+        wish.mine.splice(i, 1);
+        saveMine();
+        renderMine();
+        drawObWish();
+      });
+      return el("li", {}, el("span", { className: "text", textContent: item }), remove);
+    }));
+  }
+
+  async function obNext() {
+    const step = ob.steps[ob.i];
+    if (step.type === "question") {
+      try {
+        const answers = Object.fromEntries(QUESTIONS.map((q) => [q.id, (ob.answers[q.id] || "").trim()]));
+        sleuth.data.my_facts = await rpc("santa_set_facts", { p_year: year, p_name: match.g, p_token: match.k, p_answers: answers });
+      } catch (err) {
+        setStatus("caseStatus", friendlyError(err), true);
+      }
+    }
+    if (step.type === "avatar") await saveAvatar();
+    if (step.type === "done") {
+      finishOnboarding();
+      return;
+    }
+    ob.i++;
+    renderOnboarding();
+  }
+
+  function finishOnboarding() {
+    $("onboard").classList.remove("open");
+    $("joinGame").hidden = true;
+    play("chime");
+    if ($("office").classList.contains("open")) renderOffice();
+    else openOffice();
+  }
+
   // ---------- Stepping in and out of the office ----------
   function openOffice() {
     sleuth.lastFocus = document.activeElement;
@@ -2613,15 +2838,10 @@
     $("officeExit").focus();
     play("jingle", 1);
     loadGame().catch(() => {});  // refresh in the background in case a clue has just unlocked
-    const factsDone = QUESTIONS.every((q) => sleuth.data.my_facts[q.id]);
-    // Nudge (once per visit) towards whatever's missing: the fact file first, then an avatar
-    if (!sleuth.prompted) {
-      const needsFacts = !factsDone && !sleuth.data.facts_locked;
-      const needsAvatar = !(sleuth.data.avatars || {})[match.g];
-      if (needsFacts || needsAvatar) {
-        sleuth.prompted = true;
-        setTimeout(() => openCase(needsFacts ? "facts" : "avatar"), 700);
-      }
+    // First visit (or unfinished setup): walk them through it, once per visit
+    if (!sleuth.prompted && onboardingNeeded()) {
+      sleuth.prompted = true;
+      setTimeout(startOnboarding, 500);
     }
   }
 
@@ -2643,6 +2863,11 @@
       openOffice();
     });
     $("officeExit").addEventListener("click", closeOffice);
+    $("obNext").addEventListener("click", obNext);
+    $("obBack").addEventListener("click", () => { ob.i = Math.max(0, ob.i - 1); renderOnboarding(); });
+    $("obSkip").addEventListener("click", () => { ob.i++; renderOnboarding(); });
+    $("obClose").addEventListener("click", () => $("onboard").classList.remove("open"));
+    $("joinGame").addEventListener("click", startOnboarding);
     $("openFacts").addEventListener("click", () => openCase("facts"));
     $("openBoard").addEventListener("click", () => openCase("board"));
     $("openRules").addEventListener("click", () => openCase("rules"));
