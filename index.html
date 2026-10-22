@@ -582,6 +582,99 @@
   .map-card .note-chip.win { background: #dcfce7; color: #166534; }
   .map-card .note-chip.miss { background: #fee2e2; color: #991b1b; }
 
+  /* ---------- Set dressing: pretend "evidence" around the office (purely decorative) ---------- */
+  .ev {
+    position: relative;
+    flex: none;
+    color: #1f2937;
+    box-shadow: 0 8px 14px rgba(0, 0, 0, .4);
+    transform: rotate(var(--r, 0deg));
+  }
+  .ev .hand { font: 700 18px/1.1 'Caveat', cursive; }
+  .evidence-wall {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 26px 22px;
+    margin: 44px auto 0;
+    padding: 0 8px;
+  }
+  .ev-polaroid { width: 132px; padding: 8px 8px 10px; background: #fff; text-align: center; }
+  .ev-polaroid .shot { position: relative; display: grid; place-items: center; height: 104px; overflow: hidden; }
+  .ev-polaroid .hand { margin-top: 6px; }
+  .ev-cookie .shot { background: radial-gradient(circle at 50% 60%, #6b4a32, #2b1a10); }
+  .ev-cookie .bitten {
+    font-size: 58px;
+    line-height: 1;
+    -webkit-mask: radial-gradient(circle at 92% 18%, transparent 0 26%, #000 27%), radial-gradient(circle at 70% 2%, transparent 0 16%, #000 17%);
+    -webkit-mask-composite: source-in;
+    mask: radial-gradient(circle at 92% 18%, transparent 0 26%, #000 27%) intersect, radial-gradient(circle at 70% 2%, transparent 0 16%, #000 17%);
+  }
+  .ev-cookie .crumbs { position: absolute; inset: 0; background: radial-gradient(#c58b4f 1.6px, transparent 2px) 0 0 / 17px 13px; opacity: .55; -webkit-mask: linear-gradient(transparent 55%, #000); mask: linear-gradient(transparent 55%, #000); }
+  .ev-cookie .stamp-time { position: absolute; right: 6px; bottom: 4px; font: bold 10px 'Courier New', monospace; color: #fbbf24; }
+  .ev-roof .shot { background: linear-gradient(#1e2a4a 0 30%, #e8eef6 30%); }
+  .ev-roof svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+  .ev-sticky { width: 150px; padding: 16px 14px 14px; background: #fde68a; text-align: center; }
+  .ev-sticky .hand { font-size: 24px; color: #7f1d1d; }
+  .ev-sticky .big { display: block; font: 700 30px/1 'Caveat', cursive; color: #1f2937; }
+  .ev-sticky s { color: #6b7280; text-decoration-color: #dc2626; text-decoration-thickness: 3px; }
+  .ev-sticky .circled { display: inline-block; padding: 0 8px; border: 3px solid #dc2626; border-radius: 50% 45% 55% 48%; transform: rotate(-4deg); }
+  .ev-bag {
+    width: 128px;
+    padding: 22px 10px 10px;
+    border: 2px solid rgba(255, 255, 255, .55);
+    border-radius: 6px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, .35), rgba(255, 255, 255, .12));
+    box-shadow: 0 8px 14px rgba(0, 0, 0, .35), inset 0 0 18px rgba(255, 255, 255, .25);
+    text-align: center;
+  }
+  .ev-bag::before { content: ""; position: absolute; left: 6px; right: 6px; top: 8px; height: 5px; border-radius: 3px; background: #dc2626; }
+  .ev-bag .item { font-size: 40px; line-height: 1.1; }
+  .ev-bag .label { margin-top: 6px; padding: 4px; background: #fff; font: bold 10px/1.3 Arial, Helvetica, sans-serif; letter-spacing: .5px; text-transform: uppercase; color: #b91c1c; }
+  .ev-cal { width: 96px; background: #fff; text-align: center; clip-path: polygon(0 0, 100% 0, 100% 92%, 88% 100%, 72% 93%, 55% 100%, 38% 94%, 20% 100%, 0 93%); }
+  .ev-cal .month { padding: 4px; background: #b91c1c; color: #fff; font: bold 12px Arial, Helvetica, sans-serif; letter-spacing: 3px; }
+  .ev-cal .day { position: relative; display: inline-block; margin: 6px 0 14px; font: 900 44px Georgia, serif; color: #1f2937; }
+  .ev-cal .day::after { content: ""; position: absolute; inset: -4px -12px; border: 3px solid #dc2626; border-radius: 50% 46% 52% 48%; transform: rotate(6deg); }
+  .ev-receipt {
+    width: 150px;
+    padding: 12px 12px 18px;
+    background: #fbfaf5;
+    font: 11px/1.5 'Courier New', monospace;
+    color: #374151;
+    clip-path: polygon(0 0, 100% 0, 100% 96%, 92% 100%, 84% 96%, 76% 100%, 68% 96%, 60% 100%, 52% 96%, 44% 100%, 36% 96%, 28% 100%, 20% 96%, 12% 100%, 4% 96%, 0 100%);
+  }
+  .ev-receipt .shop { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed #9ca3af; text-align: center; font-weight: bold; }
+  .ev-receipt .row { display: flex; justify-content: space-between; }
+  .ev-receipt .paid { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #9ca3af; text-align: center; font-weight: bold; color: #b91c1c; }
+  .ev-prints { width: 140px; padding: 10px; background: #f5f5f4; text-align: center; }
+  .ev-prints .title { font: bold 10px Arial, Helvetica, sans-serif; letter-spacing: 2px; color: #6b7280; }
+  .ev-prints svg { display: block; width: 70px; height: 84px; margin: 6px auto; }
+  .ev-map { width: 160px; height: 112px; overflow: hidden; background: #f3e3c3; clip-path: polygon(3% 4%, 97% 0, 100% 90%, 88% 100%, 5% 96%, 0 40%); }
+  .ev-map svg { width: 100%; height: 100%; }
+  .ev-map .hand { position: absolute; left: 8px; bottom: 6px; font-size: 15px; color: #7f1d1d; }
+  .ev-wanted {
+    width: 150px;
+    padding: 10px 10px 12px;
+    background: radial-gradient(circle at 30% 20%, #f8e7c2, #e6c98f);
+    text-align: center;
+    color: #5b3a1e;
+  }
+  .ev-wanted .w { font: 900 26px/1 Georgia, serif; letter-spacing: 1px; color: #7f1d1d; }
+  .ev-wanted .sub { font: bold 10px Arial, Helvetica, sans-serif; letter-spacing: 2px; }
+  .ev-wanted .face { margin: 6px auto; width: 92px; height: 92px; display: grid; place-items: center; border: 2px solid #5b3a1e; background: #d9b77a; font: 900 56px Georgia, serif; color: #5b3a1e; }
+  .ev-wanted .reward { font: 700 16px 'Caveat', cursive; }
+  /* Two pieces of evidence flank the title on wide screens */
+  .case-head { position: relative; }
+  .head-ev { position: absolute; top: 0; display: none; }
+  .head-ev.left { left: 0; top: 58px; transform: scale(.85); transform-origin: top left; }  /* clear of the "Outside" tag */
+  @media (max-width: 600px) { .ev.wide-only-ev { display: none; } }
+  .head-ev.right { right: 0; top: 20px; }
+  @media (min-width: 1000px) { .head-ev { display: block; } }
+  .coffee-ring { position: absolute; left: 12%; bottom: 12px; width: 70px; height: 26px; border: 4px solid rgba(70, 40, 20, .45); border-radius: 50%; pointer-events: none; }
+
   /* Desk along the bottom, with (for now purely decorative) props */
   .desk { margin-top: 40px; }
   .desk-props { position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 18px 30px; padding: 0 12px; }
@@ -1496,6 +1589,18 @@
 
   <div class="office-inner">
     <header class="case-head">
+      <div class="head-ev left" aria-hidden="true">
+        <div class="ev ev-wanted" style="--r:-4deg"><span class="pin"></span>
+          <div class="w">WANTED</div><div class="sub">FOR QUESTIONING</div>
+          <div class="face">?</div>
+          <div class="reward">Reward: one mince pie</div>
+        </div>
+      </div>
+      <div class="head-ev right" aria-hidden="true">
+        <div class="ev ev-sticky" style="--r:5deg"><span class="pin"></span>
+          <div class="hand">Who ate the mince pies??</div>
+        </div>
+      </div>
       <div class="eyebrow">CAN YOU FIGURE IT OUT?</div>
       <h2>Santa Sleuth</h2>
       <p class="case-sub" id="caseSub"></p>
@@ -1530,6 +1635,63 @@
     </button>
     <p class="case-status" id="caseStatus"></p>
 
+    <div class="evidence-wall" aria-hidden="true">
+      <div class="ev ev-polaroid ev-cookie" style="--r:-5deg"><span class="pin"></span>
+        <div class="shot"><span class="crumbs"></span><span class="bitten">&#127850;</span><span class="stamp-time">02:14</span></div>
+        <div class="hand">Exhibit A</div>
+      </div>
+      <div class="ev ev-sticky" style="--r:3deg"><span class="pin"></span>
+        <span class="big"><span class="circled">NAUGHTY?</span></span>
+        <span class="big"><s>NICE???</s></span>
+      </div>
+      <div class="ev ev-bag" style="--r:-2deg">
+        <div class="item">&#128276;</div>
+        <div class="label">Evidence #24<br>Bell found in chimney</div>
+      </div>
+      <div class="ev ev-polaroid ev-roof" style="--r:4deg"><span class="pin"></span>
+        <div class="shot">
+          <svg viewBox="0 0 116 104" aria-hidden="true">
+            <g fill="#8b5a2b" opacity=".75">
+              <path d="M22 50 q4 -8 8 0 q-4 6 -8 0z M33 50 q4 -8 8 0 q-4 6 -8 0z"/>
+              <path d="M44 66 q4 -8 8 0 q-4 6 -8 0z M55 66 q4 -8 8 0 q-4 6 -8 0z"/>
+              <path d="M66 82 q4 -8 8 0 q-4 6 -8 0z M77 82 q4 -8 8 0 q-4 6 -8 0z"/>
+            </g>
+            <circle cx="96" cy="14" r="7" fill="#fef3c7"/>
+          </svg>
+        </div>
+        <div class="hand">On the roof?!</div>
+      </div>
+      <div class="ev ev-cal wide-only-ev" style="--r:-3deg">
+        <div class="month">DEC</div><div class="day">24</div>
+      </div>
+      <div class="ev ev-receipt" style="--r:2deg">
+        <div class="shop">NORTH POLE<br>CORNER SHOP</div>
+        <div class="row"><span>1x CARROT</span><span>0.20</span></div>
+        <div class="row"><span>1x SHERRY</span><span>4.50</span></div>
+        <div class="row"><span>9x HAY BALE</span><span>27.00</span></div>
+        <div class="row"><span>1x SOOT WIPES</span><span>1.99</span></div>
+        <div class="paid">PAID: S.C.</div>
+      </div>
+      <div class="ev ev-prints wide-only-ev" style="--r:-4deg"><span class="pin"></span>
+        <div class="title">FINGERPRINTS</div>
+        <svg viewBox="0 0 70 84" aria-hidden="true" fill="none" stroke="#6b7280" stroke-width="1.6">
+          <ellipse cx="35" cy="44" rx="28" ry="36"/><ellipse cx="35" cy="45" rx="22" ry="29"/><ellipse cx="35" cy="46" rx="16" ry="22"/>
+          <ellipse cx="35" cy="47" rx="10" ry="15"/><ellipse cx="35" cy="48" rx="5" ry="8"/>
+          <path d="M12 30 q23 -18 46 0" stroke="#dc2626" stroke-width="2" opacity=".5"/>
+        </svg>
+        <div class="hand" style="font-size:16px">Sticky &mdash; candy cane?</div>
+      </div>
+      <div class="ev ev-map wide-only-ev" style="--r:3deg"><span class="pin" style="left:20%"></span>
+        <svg viewBox="0 0 160 112" aria-hidden="true">
+          <path d="M10 70 q30 -40 60 -20 t70 -30" fill="none" stroke="#9a7b4f" stroke-width="2"/>
+          <path d="M20 22 q40 30 70 18 t50 50" fill="none" stroke="#b91c1c" stroke-width="2.5" stroke-dasharray="5 5"/>
+          <path d="M132 84 l12 12 M144 84 l-12 12" stroke="#b91c1c" stroke-width="4" stroke-linecap="round"/>
+          <text x="18" y="18" font-size="10" fill="#7f1d1d" font-family="Arial">N. POLE</text>
+        </svg>
+        <div class="hand">Last seen heading south</div>
+      </div>
+    </div>
+
     <div class="desk" aria-hidden="true">
       <div class="desk-props">
         <div class="prop books"><span class="book">CLUES</span><span class="book">GOOD BEHAVIOUR?</span><span class="book">TOP SECRET</span></div>
@@ -1539,7 +1701,7 @@
         <div class="prop globe"><span class="glass"><span class="flakes"></span>&#127968;</span><span class="base"></span></div>
         <div class="prop lamp"><span class="glow"></span><span class="shade"></span><span class="arm"></span><span class="base"></span></div>
       </div>
-      <div class="desk-top"></div>
+      <div class="desk-top" style="position:relative"><span class="coffee-ring"></span></div>
     </div>
   </div>
 </section>
