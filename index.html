@@ -200,7 +200,60 @@
   }
   .sound:hover .ball { transform: scale(1.08); }
 
-  @media (max-width: 500px) { .moon { right: 26vw; } }
+  @media (max-width: 500px) { .moon { top: 118px; right: 8vw; } }
+
+  /* ---------- Santa Sleuth (game panel) ---------- */
+  .facts label { display: block; margin: 0 0 14px; font: bold 14px Arial, Helvetica, sans-serif; color: #374151; }
+  .facts select, .facts input {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px 12px;
+    border: 2px solid #e2cf94;
+    border-radius: 10px;
+    background: #fff;
+    font: 16px Georgia, serif;
+    color: #1f2937;
+  }
+  .facts select:disabled, .facts input:disabled { background: #f5f0e1; color: #6b7280; }
+  .big-btn {
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    border-radius: 10px;
+    background: var(--red);
+    color: #fff;
+    font: bold 15px Arial, Helvetica, sans-serif;
+    cursor: pointer;
+  }
+  .big-btn:disabled { opacity: .45; cursor: default; }
+  .clue { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; padding: 12px; border: 1px dashed #e2cf94; border-radius: 12px; background: #fff; }
+  .clue .num { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--red); color: #fff; font: bold 15px Arial, Helvetica, sans-serif; }
+  .clue.locked { background: #faf5e6; color: #6b7280; }
+  .clue.locked .num { background: #9ca3af; }
+  .clue .q { font-size: 13px; color: #6b7280; }
+  .clue .a { margin-top: 2px; font-size: 18px; font-weight: bold; color: #1f2937; overflow-wrap: anywhere; }
+  .clue.quiet .a { font-weight: normal; font-style: italic; color: #6b7280; }
+  .suspects { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .suspect { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px; border: 1px solid #e2cf94; border-radius: 12px; background: #fff; }
+  .suspect .who { padding: 2px 4px; border: 0; background: none; font: bold 16px Georgia, serif; color: #1f2937; cursor: pointer; }
+  .suspect.crossed { opacity: .4; }
+  .suspect.crossed .who { text-decoration: line-through; }
+  .suspect.bet { border-color: var(--red); box-shadow: 0 0 0 2px rgba(185, 28, 28, .18); }
+  .stepper { display: flex; align-items: center; gap: 8px; }
+  .stepper button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: #f3ead2; color: #7f1d1d; font: bold 17px Arial, Helvetica, sans-serif; cursor: pointer; }
+  .stepper button:disabled { opacity: .3; cursor: default; }
+  .stepper .count { min-width: 22px; text-align: center; font: bold 17px Arial, Helvetica, sans-serif; color: var(--red); }
+  .board { margin: 0; padding: 0; list-style: none; }
+  .board li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px dashed #e2cf94; font-size: 16px; }
+  .board .st { font: 13px Arial, Helvetica, sans-serif; color: #6b7280; text-align: right; }
+  .board .pts { font: bold 16px Arial, Helvetica, sans-serif; color: var(--red); white-space: nowrap; }
+  .rules { margin-top: 18px; font-size: 14px; color: #4b5563; }
+  .rules summary { cursor: pointer; font: bold 14px Arial, Helvetica, sans-serif; color: var(--red); }
+  .rules li { margin-bottom: 6px; }
+  .verdict { margin-bottom: 14px; padding: 14px; border: 2px solid var(--gold); border-radius: 12px; background: #fff7ed; text-align: center; }
+  .verdict .big { font-family: var(--festive); font-size: 36px; font-weight: bold; color: var(--red); }
+  #gameSheet .tab { font-size: 12px; padding: 10px 0; white-space: nowrap; }
 
   /* ---------- Heading ---------- */
   .eyebrow { font: 12px Arial, Helvetica, sans-serif; letter-spacing: 5px; color: var(--gold-light); }
@@ -404,14 +457,15 @@
   }
 
   .wish-btn { left: 26px; }
-  .wish-btn .tag-face {
+  .detective-btn { left: 148px; animation-delay: -1.3s; }
+  .tag-hanger .tag-face {
     padding: 22px 16px 10px;
     font-size: 21px;
     clip-path: polygon(22% 0, 78% 0, 100% 20%, 100% 100%, 0 100%, 0 20%);
   }
-  .wish-btn .tag-face .hole { top: 7px; left: 50%; margin-left: -4.5px; }
-  .wish-btn:hover .tag-face { transform: scale(1.05); }
-  .wish-btn .dot {
+  .tag-hanger .tag-face .hole { top: 7px; left: 50%; margin-left: -4.5px; }
+  .tag-hanger:hover .tag-face { transform: scale(1.05); }
+  .tag-hanger .dot {
     position: absolute;
     top: 36px;
     right: -5px;
@@ -902,7 +956,16 @@
   <span class="ball"><span class="snowcap" data-max="6" style="left:26%;right:26%;bottom:calc(100% - 4px)"></span><span id="soundIcon">&#128266;</span></span>
 </button>
 
-<button class="hanger wish-btn" id="wishBtn" type="button" hidden>
+<button class="hanger tag-hanger detective-btn" id="gameBtn" type="button" hidden>
+  <span class="string"></span>
+  <span class="tag-wrap">
+    <span class="snowcap" data-max="9" style="left:24%;right:24%"></span>
+    <span class="tag-face"><span class="hole"></span>Detective</span>
+  </span>
+  <span class="dot" id="gameDot" hidden></span>
+</button>
+
+<button class="hanger tag-hanger wish-btn" id="wishBtn" type="button" hidden>
   <span class="string"></span>
   <span class="tag-wrap">
     <span class="snowcap" data-max="9" style="left:24%;right:24%"></span>
@@ -934,6 +997,50 @@
       <button type="submit">Add</button>
     </form>
     <p class="status" id="myStatus"></p>
+  </div>
+</section>
+
+<div class="backdrop" id="gameBackdrop"></div>
+<section class="sheet" id="gameSheet" role="dialog" aria-modal="true" aria-labelledby="gameTitle">
+  <div class="stripe"></div>
+  <div class="sheet-head">
+    <h2 id="gameTitle">Santa Sleuth</h2>
+    <button class="close" id="gameClose" type="button" aria-label="Close">&times;</button>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" data-tab="clues" role="tab" type="button">&#128269; Clues</button>
+    <button class="tab" data-tab="suspects" role="tab" type="button">&#127919; Suspects</button>
+    <button class="tab" data-tab="facts" role="tab" type="button">&#128203; My facts</button>
+    <button class="tab" data-tab="board" role="tab" type="button">&#127942; Board</button>
+  </div>
+  <div class="panel" data-panel="clues" role="tabpanel">
+    <div id="cluesBody"></div>
+    <details class="rules">
+      <summary>How to play</summary>
+      <ul>
+        <li><strong>Find your Santa.</strong> Five of your Santa's fact-file answers unlock as clues on <span id="ruleDates"></span>.</li>
+        <li><strong>Bet 10 tokens</strong> on suspects &mdash; all on one, or spread them. <strong>Lock in early</strong> for a bigger multiplier: &times;3 before clue 1, then &times;2.5, &times;2, &times;1.5, &times;1.2 and &times;1 after clue 5. Never locking counts &times;0.5.</li>
+        <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every token your giftee puts on you. (If they don't play, you get 5. No complete fact file, no stealth points.)</li>
+        <li><strong>Fact files must be true.</strong> Out loud, though, everyone denies everything &mdash; lying is part of the game!</li>
+        <li>Your Santa and the scores are revealed on Christmas Day.</li>
+      </ul>
+    </details>
+  </div>
+  <div class="panel" data-panel="suspects" role="tabpanel" hidden>
+    <p class="note" id="tokenNote"></p>
+    <div class="suspects" id="suspectGrid"></div>
+    <button class="big-btn" id="lockBtn" type="button">&#128274; Lock in my guess</button>
+    <p class="status" id="guessStatus"></p>
+  </div>
+  <div class="panel" data-panel="facts" role="tabpanel" hidden>
+    <p class="note" id="factsNote"></p>
+    <form class="facts" id="factsForm"></form>
+    <button class="big-btn" id="factsSave" type="button">Save my fact file</button>
+    <p class="status" id="factsStatus"></p>
+  </div>
+  <div class="panel" data-panel="board" role="tabpanel" hidden>
+    <p class="note" id="boardNote"></p>
+    <ol class="board" id="boardList"></ol>
   </div>
 </section>
 <canvas id="confetti"></canvas>
@@ -1344,7 +1451,11 @@
     $("backdrop").addEventListener("click", closeSheet);
     $("tabTheirs").addEventListener("click", () => selectTab("theirs"));
     $("tabMine").addEventListener("click", () => selectTab("mine"));
-    addEventListener("keydown", (e) => { if (e.key === "Escape" && $("sheet").classList.contains("open")) closeSheet(); });
+    addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if ($("sheet").classList.contains("open")) closeSheet();
+      if ($("gameSheet").classList.contains("open")) closeGame();
+    });
 
     if (match.k) {
       $("addForm").addEventListener("submit", (e) => {
@@ -1366,6 +1477,261 @@
     }
     renderTheirs();
     loadMine();
+  }
+
+  // ---------- Santa Sleuth (guess-your-Santa game) ----------
+  // The server works out the clues (from the pairings it holds), enforces the dates and token rules,
+  // and only scores the game once the host runs `SecretSanta.py --reveal`.
+  const QUESTIONS = [
+    { id: "q1", text: "Tea, coffee, or neither?", options: ["Tea", "Coffee", "Both", "Neither"] },
+    { id: "q2", text: "Your go-to Christmas film?" },
+    { id: "q3", text: "Ever broken a bone? Which?", placeholder: "e.g. No / Left wrist" },
+    { id: "q4", text: "Brussels sprouts?", options: ["Love them", "Hate them", "Tolerate them"] },
+    { id: "q5", text: "The furthest place you've been?" },
+    { id: "q6", text: "Something you were obsessed with as a kid?" },
+    { id: "q7", text: "A hidden talent?" },
+    { id: "q8", text: "Real tree or fake tree?", options: ["Real", "Fake", "No tree!"] },
+  ];
+  const QUESTION_TEXT = Object.fromEntries(QUESTIONS.map((q) => [q.id, q.text]));
+  const MULTIPLIERS = [3, 2.5, 2, 1.5, 1.2, 1];  // by clues released when you lock in
+  const TOKENS = 10;
+  const sleuth = { data: null, draft: {}, crossed: new Set(), saveTimer: null, lastFocus: null };
+  const CROSSED_KEY = match ? `santa-crossed-${year}-${match.g}` : "";
+  const SEEN_KEY = match ? `santa-seen-clues-${year}-${match.g}` : "";
+  try { sleuth.crossed = new Set(JSON.parse(localStorage.getItem(CROSSED_KEY) || "[]")); } catch {}
+
+  const fmtDate = (value) => new Date(value.length === 10 ? `${value}T12:00:00` : value)
+    .toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  const el = (tag, props = {}, ...children) => {
+    const node = document.createElement(tag);
+    Object.assign(node, props);
+    node.append(...children);
+    return node;
+  };
+  const tokensUsed = () => Object.values(sleuth.draft).reduce((sum, n) => sum + n, 0);
+  const currentMultiplier = () => MULTIPLIERS[Math.min(sleuth.data.released, 5)];
+
+  function friendlyError(err) {
+    const message = String(err.message);
+    if (/already locked/.test(message)) return "You've already locked in.";
+    if (/game is over/.test(message)) return "The game is over — check the Board!";
+    if (/fact files are locked/.test(message)) return "Fact files are locked now.";
+    if (/only have 10/.test(message)) return "You only have 10 tokens.";
+    if (/not allowed/.test(message)) return "This link can't play — use the link from your latest Secret Santa email.";
+    return "Couldn't save — check your connection and try again.";
+  }
+
+  async function loadGame() {
+    sleuth.data = await rpc("santa_get_game", { p_year: year, p_name: match.g, p_token: match.k });
+    sleuth.draft = { ...sleuth.data.guess.tokens };
+    renderClues();
+    renderSuspects();
+    renderFacts();
+    renderBoard();
+    updateGameDot();
+  }
+
+  // Red dot on the Detective tag when there's a clue (or the reveal) you haven't looked at yet
+  const newestNews = () => (sleuth.data.revealed ? 99 : sleuth.data.released);
+  function updateGameDot() {
+    let seen = 0;
+    try { seen = Number(localStorage.getItem(SEEN_KEY) || 0); } catch {}
+    $("gameDot").hidden = newestNews() <= seen;
+  }
+
+  function clueCard(num, question, answer) {
+    return el("div", { className: `clue${answer ? "" : " quiet"}` },
+      el("div", { className: "num", textContent: num }),
+      el("div", {},
+        el("div", { className: "q", textContent: question }),
+        el("div", { className: "a", textContent: answer || "\u{1F910} Your Santa is staying suspiciously quiet…" })));
+  }
+
+  function renderClues() {
+    const d = sleuth.data;
+    const body = $("cluesBody");
+    body.replaceChildren();
+    $("ruleDates").textContent = d.clue_dates.map(fmtDate).join(", ");
+
+    if (d.revealed) {
+      const mine = d.board.find((row) => row.name === match.g);
+      body.append(el("div", { className: "verdict" },
+        el("div", { textContent: "Your Secret Santa was…" }),
+        el("div", { className: "big", textContent: d.santa || "?" }),
+        mine ? el("div", { textContent: `You scored ${mine.total} points (\u{1F50D} ${mine.detective} + \u{1F3AD} ${mine.stealth})` }) : ""));
+      body.append(el("p", { className: "note", textContent: `${d.santa}'s full fact file:` }));
+      for (const q of QUESTIONS) body.append(clueCard("✓", q.text, d.santa_facts[q.id] || "(left blank)"));
+      return;
+    }
+    if (!d.released) {
+      body.append(el("p", { className: "note", textContent: `Clues about your Santa start on ${fmtDate(d.clue_dates[0])}. Fill in your own fact file before then!` }));
+    }
+    for (let n = 1; n <= 5; n++) {
+      const clue = d.clues.find((c) => c.n === n);
+      if (clue) {
+        body.append(clueCard(n, QUESTION_TEXT[clue.q], clue.a));
+      } else {
+        const card = clueCard(n, `Unlocks ${fmtDate(d.clue_dates[n - 1])}`, "\u{1F512} Locked");
+        card.classList.add("locked");
+        body.append(card);
+      }
+    }
+  }
+
+  function renderSuspects() {
+    const d = sleuth.data;
+    const locked = d.guess.locked || d.revealed;
+    const grid = $("suspectGrid");
+    grid.replaceChildren();
+    for (const name of d.players.filter((p) => p !== match.g)) {
+      const count = sleuth.draft[name] || 0;
+      const card = el("div", { className: `suspect${sleuth.crossed.has(name) ? " crossed" : ""}${count ? " bet" : ""}` });
+      const who = el("button", { className: "who", type: "button", textContent: name, title: "Tap to cross out" });
+      who.addEventListener("click", () => {
+        if (sleuth.crossed.has(name)) sleuth.crossed.delete(name);
+        else sleuth.crossed.add(name);
+        try { localStorage.setItem(CROSSED_KEY, JSON.stringify([...sleuth.crossed])); } catch {}
+        renderSuspects();
+      });
+      const minus = el("button", { type: "button", textContent: "−", disabled: locked || !count });
+      const plus = el("button", { type: "button", textContent: "+", disabled: locked || tokensUsed() >= TOKENS });
+      minus.setAttribute("aria-label", `One less token on ${name}`);
+      plus.setAttribute("aria-label", `One more token on ${name}`);
+      minus.addEventListener("click", () => changeTokens(name, -1));
+      plus.addEventListener("click", () => changeTokens(name, 1));
+      card.append(who, el("div", { className: "stepper" }, minus, el("span", { className: "count", textContent: count }), plus));
+      grid.append(card);
+    }
+
+    if (d.revealed) {
+      $("tokenNote").textContent = "The game is over — check the Board!";
+    } else if (d.guess.locked) {
+      const c = d.guess.clues_at_lock;
+      $("tokenNote").textContent = `\u{1F512} Locked in ${c ? `after clue ${c}` : "before any clues"} — ×${MULTIPLIERS[Math.min(c, 5)]} multiplier. Good luck!`;
+    } else {
+      $("tokenNote").textContent = `${TOKENS - tokensUsed()} of ${TOKENS} tokens left. Tap a name to cross them out. Locking in now gives ×${currentMultiplier()}.`;
+    }
+    $("lockBtn").hidden = locked;
+    $("lockBtn").disabled = !tokensUsed();
+    $("lockBtn").textContent = `\u{1F512} Lock in my guess (×${currentMultiplier()})`;
+  }
+
+  function changeTokens(name, delta) {
+    const next = (sleuth.draft[name] || 0) + delta;
+    if (next < 0 || tokensUsed() + delta > TOKENS) return;
+    if (next) sleuth.draft[name] = next;
+    else delete sleuth.draft[name];
+    renderSuspects();
+    clearTimeout(sleuth.saveTimer);
+    setStatus("guessStatus", "Saving…");
+    sleuth.saveTimer = setTimeout(() => saveGuess(false), 600);  // batch quick taps into one save
+  }
+
+  async function saveGuess(lock) {
+    try {
+      sleuth.data.guess = await rpc("santa_set_guess", { p_year: year, p_name: match.g, p_token: match.k, p_tokens: sleuth.draft, p_lock: lock });
+      setStatus("guessStatus", lock ? "\u{1F512} Locked in. Good luck, detective!" : "Saved ✓");
+      if (lock) await loadGame();
+    } catch (err) {
+      setStatus("guessStatus", friendlyError(err), true);
+    }
+  }
+
+  function renderFacts() {
+    const d = sleuth.data;
+    const form = $("factsForm");
+    form.replaceChildren();
+    for (const q of QUESTIONS) {
+      const value = d.my_facts[q.id] || "";
+      const input = q.options
+        ? el("select", { name: q.id, disabled: d.facts_locked },
+            el("option", { value: "", textContent: "Choose…" }),
+            ...q.options.map((o) => el("option", { value: o, textContent: o, selected: o === value })))
+        : el("input", { name: q.id, value, maxLength: 80, placeholder: q.placeholder || "", disabled: d.facts_locked, autocomplete: "off" });
+      form.append(el("label", {}, q.text, input));
+    }
+    const lastDay = fmtDate(new Date(new Date(d.facts_lock) - 1).toISOString());
+    $("factsSave").hidden = d.facts_locked;
+    $("factsNote").textContent = d.facts_locked
+      ? "Fact files are locked — your answers are now your giftee's clues."
+      : `Answer honestly: 5 of these become clues for whoever you're buying for. You can change them until the end of ${lastDay}. Answer all 8 to earn stealth points.`;
+  }
+
+  async function saveFacts() {
+    const form = $("factsForm");
+    const answers = Object.fromEntries(QUESTIONS.map((q) => [q.id, form.elements[q.id].value.trim()]));
+    setStatus("factsStatus", "Saving…");
+    try {
+      sleuth.data.my_facts = await rpc("santa_set_facts", { p_year: year, p_name: match.g, p_token: match.k, p_answers: answers });
+      const blanks = Object.values(answers).filter((a) => !a).length;
+      setStatus("factsStatus", blanks ? `Saved ✓ — answer the other ${blanks} to earn stealth points.` : "Saved ✓ All 8 answered — nice!");
+    } catch (err) {
+      setStatus("factsStatus", friendlyError(err), true);
+    }
+  }
+
+  function renderBoard() {
+    const d = sleuth.data;
+    const list = $("boardList");
+    list.replaceChildren();
+    $("boardNote").textContent = d.revealed
+      ? "Final scores: \u{1F50D} detective + \u{1F3AD} stealth."
+      : "Scores appear on Christmas Day. For now, here's who has locked in.";
+    const medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
+    let rank = 0;
+    for (const row of d.board) {
+      const medal = d.revealed && !row.host ? (medals[rank++] || "") : "";
+      const label = `${medal ? `${medal} ` : ""}${row.name}${row.host ? " \u{1F385} (host)" : ""}`;
+      const right = d.revealed
+        ? el("span", { className: "st" }, `\u{1F50D} ${row.detective} + \u{1F3AD} ${row.stealth} = `, el("span", { className: "pts", textContent: `${row.total}` }))
+        : el("span", { className: "st", textContent: row.locked ? `\u{1F512} after ${row.clues_at_lock ? `clue ${row.clues_at_lock}` : "no clues!"}` : "\u{1F50E} still sleuthing" });
+      list.append(el("li", {}, el("span", { textContent: label }), right));
+    }
+  }
+
+  function selectGameTab(name) {
+    for (const tab of document.querySelectorAll("#gameSheet .tab")) tab.setAttribute("aria-selected", String(tab.dataset.tab === name));
+    for (const panel of document.querySelectorAll("#gameSheet .panel")) panel.hidden = panel.dataset.panel !== name;
+    if (name === "clues") {
+      try { localStorage.setItem(SEEN_KEY, String(newestNews())); } catch {}
+      updateGameDot();
+    }
+  }
+
+  function openGame() {
+    sleuth.lastFocus = document.activeElement;
+    const factsDone = QUESTIONS.every((q) => sleuth.data.my_facts[q.id]);
+    selectGameTab(!factsDone && !sleuth.data.facts_locked ? "facts" : "clues");
+    $("gameSheet").classList.add("open");
+    $("gameBackdrop").classList.add("open");
+    $("gameClose").focus();
+    loadGame().catch(() => {});  // refresh in the background in case a clue has just unlocked
+  }
+
+  function closeGame() {
+    $("gameSheet").classList.remove("open");
+    $("gameBackdrop").classList.remove("open");
+    if (sleuth.lastFocus) sleuth.lastFocus.focus();
+  }
+
+  if (match && match.k && SUPABASE_URL) {
+    // Only show the Detective tag once the host has set up this year's game
+    loadGame().then(() => {
+      $("gameBtn").hidden = false;
+      hangDecorations();
+    }).catch(() => {});
+    $("gameBtn").addEventListener("click", () => {
+      shedSnow($("gameBtn"));
+      openGame();
+    });
+    $("gameClose").addEventListener("click", closeGame);
+    $("gameBackdrop").addEventListener("click", closeGame);
+    for (const tab of document.querySelectorAll("#gameSheet .tab")) tab.addEventListener("click", () => selectGameTab(tab.dataset.tab));
+    $("factsSave").addEventListener("click", saveFacts);
+    $("lockBtn").addEventListener("click", () => {
+      clearTimeout(sleuth.saveTimer);
+      if (confirm(`Lock in your guess now for a ×${currentMultiplier()} multiplier? You can't change it afterwards.`)) saveGuess(true);
+    });
   }
 
   // ---------- Scenery ----------
