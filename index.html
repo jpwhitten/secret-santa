@@ -373,19 +373,20 @@
     z-index: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-areas: "prime prime" "c1 c2" "c3 c4" "c5 c6";
+    grid-template-areas: "prime prime" "c1 c2" "c3 c4" "c5 c6" "c7 c8" "tip tip";
     gap: 22px 16px;
     align-items: start;
   }
   @media (min-width: 760px) {
     .evidence {
       grid-template-columns: 1fr minmax(220px, 250px) 1fr;
-      grid-template-areas: "c1 prime c2" "c3 prime c4" "c5 prime c6";
+      grid-template-areas: "c1 prime c2" "c3 prime c4" "c5 prime c6" "c7 tip c8";
       column-gap: 40px;
     }
   }
   .c1 { grid-area: c1; } .c2 { grid-area: c2; } .c3 { grid-area: c3; }
   .c4 { grid-area: c4; } .c5 { grid-area: c5; } .c6 { grid-area: c6; }
+  .c7 { grid-area: c7; } .c8 { grid-area: c8; } .clue-note.tip { grid-area: tip; justify-self: center; }
   .evidence .prime { grid-area: prime; justify-self: center; align-self: center; }
 
   .clue-note {
@@ -400,6 +401,9 @@
   .clue-note .q { margin: 4px 0; font: 11px Arial, Helvetica, sans-serif; letter-spacing: 1px; text-transform: uppercase; color: #8a6d4a; }
   .clue-note .a { font: 700 26px/1.05 'Caveat', cursive; color: #1f2937; overflow-wrap: anywhere; }
   .clue-note.quiet .a { font-size: 21px; color: #6b7280; }
+  .menu-card { font-size: 21px; line-height: 1.15; }
+  .menu-card span { font: 11px Arial, Helvetica, sans-serif; letter-spacing: 1px; text-transform: uppercase; color: #8a6d4a; }
+  .facts label select + select { margin-top: 6px; }
   .clue-note.locked { background: #e6d6b5; color: #7a6a55; }
   .clue-note.locked .a { font-size: 21px; color: #7a6a55; }
   .clue-note.tip { align-self: center; background: #fde68a; }
@@ -691,6 +695,8 @@
   .ob-hint { margin: 14px 0 0; font-size: 13px; font-style: italic; color: #8a6d4a; }
   .ob-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .ob-choice { padding: 14px 10px; border: 2px solid #e2cf94; border-radius: 12px; background: #fff; color: #1f2937; font: 16px Georgia, serif; cursor: pointer; }
+  .ob-course { margin: 12px 0 6px; font: 700 22px 'Caveat', cursive; color: var(--red); }
+  .ob-menu .ob-choice { padding: 10px 6px; font-size: 14px; }
   .ob-choice[aria-pressed="true"] { border-color: var(--red); background: #fef2f2; box-shadow: 0 0 0 3px rgba(185, 28, 28, .15); }
   .ob-input { width: 100%; padding: 14px; border: 2px solid #e2cf94; border-radius: 12px; background: #fff; color: #1f2937; font: 18px Georgia, serif; text-align: center; }
   .ob-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, .25); }
@@ -1559,9 +1565,9 @@
 
 <template id="rulesTpl">
   <ol class="rules-list">
-    <li><strong>Find your Santa.</strong> Five of your Santa's fact-file answers get pinned to your board as clues on <span class="rule-dates"></span> &mdash; and they get sharper as Christmas gets closer.</li>
+    <li><strong>Find your Santa.</strong> Your Santa's eight fact-file answers get pinned to your board as clues on <span class="rule-dates"></span> &mdash; starting vague and getting sharper as Christmas gets closer.</li>
     <li><strong>You have 10 pins.</strong> Stick them in suspects &mdash; all on one, or spread them. Your Prime Suspect is whoever has the most.</li>
-    <li><strong>Lock pins in whenever you like.</strong> Each batch keeps the multiplier from the moment you lock it: &times;3 before clue 1, then &times;2.5, &times;2, &times;1.5, &times;1.2 and &times;1 after clue 5. Locked pins turn gold and can't move. Pins never locked count &times;0.5.</li>
+    <li><strong>Lock pins in whenever you like.</strong> Each batch keeps the multiplier from the moment you lock it: &times;3 before clue 1, sliding down a little with each clue to &times;1 after clue 8. Locked pins turn gold and can't move. Pins never locked count &times;0.5.</li>
     <li><strong>Hedge your bets:</strong> lock a hunch early for big points, and keep some pins back for when the clues firm up.</li>
     <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every pin your giftee puts in you. (If they don't place all 10 pins, you get 5. No complete fact file, no stealth points.)</li>
     <li><strong>Fact files must be true.</strong> Out loud, though, everyone denies everything &mdash; lying is part of the game!</li>
@@ -2018,22 +2024,38 @@
   // ---------- Santa Sleuth (guess-your-Santa game) ----------
   // The server works out the clues (from the pairings it holds), enforces the dates and token rules,
   // and only scores the game once the host runs `SecretSanta.py --reveal`.
-  // The fact file. Questions come in five tiers of two (q1+q2 = tier 1 ... q9+q10 = tier 5): clue n is one
-  // question from tier n, so clues get sharper through December. To reword a question, just edit it here.
+  // The fact file: everyone answers the same 8 questions, and answer n becomes clue n. They run from vague
+  // Christmas questions to properly identifying ones. To reword a question, just edit it here.
   const QUESTIONS = [
     { id: "q1", tier: 1, icon: "\u{1F381}", text: "Your present wrapping style?", options: ["Neat and tidy", "Chaotic", "Gift bags all the way"] },
-    { id: "q2", tier: 1, icon: "\u{1F6CD}\u{FE0F}", text: "When do you start your Christmas shopping?", options: ["Summer", "November", "December", "Christmas Eve panic"] },
-    { id: "q3", tier: 2, icon: "\u{1F451}", text: "The cracker paper hat\u2026", options: ["Always on", "On for a bit", "Never"] },
-    { id: "q4", tier: 2, icon: "\u{1F967}", text: "Mince pies or Christmas pudding?", options: ["Mince pies", "Christmas pudding", "Both", "Neither"] },
-    { id: "q5", tier: 3, icon: "\u{1F36B}", text: "Your favourite from the Quality Street or Celebrations tin?", placeholder: "e.g. The Purple One" },
-    { id: "q6", tier: 3, icon: "\u{1F3AC}", text: "Your must-watch Christmas film?", placeholder: "e.g. Elf" },
-    { id: "q7", tier: 4, icon: "\u2B50", text: "Your part in a school nativity play?", placeholder: "e.g. Third sheep \u2014 or \u201cnever in one\u201d" },
-    { id: "q8", tier: 4, icon: "\u{1F9F8}", text: "The best present you got as a kid?", placeholder: "e.g. A Game Boy" },
-    { id: "q9", tier: 5, icon: "\u{1F62C}", text: "The worst present you've ever received?", placeholder: "e.g. A single sock" },
-    { id: "q10", tier: 5, icon: "\u{1F525}", text: "Your most legendary Christmas mishap?", placeholder: "e.g. Set the pudding on fire" },
+    { id: "q2", tier: 2, icon: "\u{1F6CD}\u{FE0F}", text: "When do you start your Christmas shopping?", options: ["Summer", "November", "December", "Christmas Eve panic"] },
+    { id: "q3", tier: 3, icon: "\u{1F37D}\u{FE0F}", text: "Pick your Christmas set menu", menu: {
+      Starter: ["Prawn cocktail", "Soup of the day", "Smoked salmon", "P\u00e2t\u00e9 and toast"],
+      Main: ["Roast turkey", "Beef Wellington", "Glazed ham", "Nut roast"],
+      Dessert: ["Christmas pudding", "Yule log", "Trifle", "Cheeseboard"],
+    } },
+    { id: "q4", tier: 4, icon: "\u{1F36B}", text: "Your favourite from the Quality Street or Celebrations tin?", placeholder: "e.g. The Purple One" },
+    { id: "q5", tier: 5, icon: "\u{1F4F1}", text: "iPhone or Android?", options: ["iPhone", "Android", "Something else"] },
+    { id: "q6", tier: 6, icon: "\u{1F37A}", text: "Your usual drink at the pub or a party?", placeholder: "e.g. Pint of Guinness" },
+    { id: "q7", tier: 7, icon: "\u2708\u{FE0F}", text: "Where was your last holiday?", placeholder: "e.g. Tenerife" },
+    { id: "q8", tier: 8, icon: "\u2648", text: "Your star sign?", options: ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"] },
   ];
   const QUESTION_TEXT = Object.fromEntries(QUESTIONS.map((q) => [q.id, q.text]));
-  const MULTIPLIERS = [3, 2.5, 2, 1.5, 1.2, 1];  // by clues released when you lock in
+  const MENU_JOIN = " \u00b7 ";
+  const menuCourses = (q) => Object.keys(q.menu);
+  const splitMenu = (q, answer) => {
+    const parts = (answer || "").split(MENU_JOIN);
+    return Object.fromEntries(menuCourses(q).map((course, i) => [course, q.menu[course].includes(parts[i]) ? parts[i] : ""]));
+  };
+  const joinMenu = (q, picks) => (menuCourses(q).every((c) => picks[c]) ? menuCourses(q).map((c) => picks[c]).join(MENU_JOIN) : "");
+  // How an answer reads on a clue note: set menus become a little menu card
+  function answerNode(q, answer) {
+    if (!q.menu || !answer) return document.createTextNode(answer);
+    const picks = splitMenu(q, answer);
+    return el("div", { className: "menu-card" }, ...menuCourses(q).map((c) => el("div", {}, el("span", { textContent: `${c}: ` }), picks[c])));
+  }
+  const MULTIPLIERS = [3, 2.6, 2.3, 2, 1.75, 1.5, 1.3, 1.15, 1];  // by clues released when you lock in
+  const CLUE_COUNT = 8;
   const TOKENS = 10;
   const sleuth = { data: null, draft: {}, mapDraft: {}, view: "case", crossed: new Set(), saveTimer: null, mapTimer: null, lastFocus: null };
   const CROSSED_KEY = match ? `santa-crossed-${year}-${match.g}` : "";
@@ -2053,7 +2075,7 @@
   const lockedTotal = () => sleuth.data.guess.locks.reduce((sum, l) => sum + l.n, 0);
   const movableTotal = () => Object.values(sleuth.draft).reduce((sum, n) => sum + n, 0);
   const tokensUsed = () => movableTotal() + lockedTotal();
-  const currentMultiplier = () => MULTIPLIERS[Math.min(sleuth.data.released, 5)];
+  const currentMultiplier = () => MULTIPLIERS[Math.min(sleuth.data.released, CLUE_COUNT)];
 
   function friendlyError(err) {
     const message = String(err.message);
@@ -2238,8 +2260,8 @@
 
     const chips = $("caseChips");
     chips.replaceChildren();
-    const pips = el("span", { className: "pips" }, ...[1, 2, 3, 4, 5].map((n) => el("i", { className: n <= d.released ? "on" : "" })));
-    chips.append(el("span", { className: "chip" }, `Clue ${Math.min(d.released, 5)} of 5`, pips));
+    const pips = el("span", { className: "pips" }, ...Array.from({ length: CLUE_COUNT }, (_, n) => el("i", { className: n < d.released ? "on" : "" })));
+    chips.append(el("span", { className: "chip" }, `Clue ${Math.min(d.released, CLUE_COUNT)} of ${CLUE_COUNT}`, pips));
     if (sleuth.view === "map") {
       renderMap(chips);
       return;
@@ -2268,8 +2290,8 @@
         : polaroid("?", { prime: true, caption: "No suspect yet", sub: "Pin someone below!" }));
     }
     const seen = seenNews();
-    const TILT = [-3, 2.5, 2, -2.5, -1.5];
-    for (let n = 1; n <= 5; n++) {
+    const TILT = [-3, 2.5, 2, -2.5, -1.5, 3, -2, 1.5];
+    for (let n = 1; n <= CLUE_COUNT; n++) {
       const clue = d.clues.find((c) => c.n === n);
       const note = el("div", { className: `clue-note c${n}` }, el("span", { className: "pin" }));
       note.style.setProperty("--r", `${TILT[n - 1]}deg`);
@@ -2278,7 +2300,7 @@
         note.append(
           el("div", { className: "icon", textContent: q.icon }),
           el("div", { className: "q", textContent: `Clue ${n} \u00b7 ${q.text}` }),
-          el("div", { className: "a", textContent: clue.a || "\u{1F910} Staying suspiciously quiet\u2026" }));
+          el("div", { className: "a" }, clue.a ? answerNode(q, clue.a) : "\u{1F910} Staying suspiciously quiet\u2026"));
         if (!clue.a) note.classList.add("quiet");
         if (!d.revealed && n > seen) {
           note.classList.add("fresh");  // newly unlocked: drop it onto the board
@@ -2289,11 +2311,11 @@
         note.append(
           el("div", { className: "icon", textContent: "\u{1F512}" }),
           el("div", { className: "q", textContent: `Clue ${n}` }),
-          el("div", { className: "a", textContent: `Unlocks ${fmtDate(d.clue_dates[n - 1])}` }));
+          el("div", { className: "a", textContent: d.clue_dates[n - 1] ? `Unlocks ${fmtDate(d.clue_dates[n - 1])}` : "Unlocks soon" }));
       }
       evidence.append(note);
     }
-    const tip = el("div", { className: "clue-note c6 tip" }, el("span", { className: "pin" }), el("div", { className: "a", textContent: "Anything is a clue! \u{1F384}" }));
+    const tip = el("div", { className: "clue-note tip" }, el("span", { className: "pin" }), el("div", { className: "a", textContent: "Anything is a clue! \u{1F384}" }));
     tip.style.setProperty("--r", "3deg");
     evidence.append(tip);
 
@@ -2345,7 +2367,7 @@
   const MAP_POT = 20;
   const mapCases = () => sleuth.data.players.filter((p) => p !== match.g);
   const mapLocked = (who) => sleuth.data.map[who] && sleuth.data.map[who].c !== null;
-  const mapWeight = (guess) => (guess.c === null ? 0.5 : MULTIPLIERS[Math.min(guess.c, 5)]);
+  const mapWeight = (guess) => (guess.c === null ? 0.5 : MULTIPLIERS[Math.min(guess.c, CLUE_COUNT)]);
 
   function renderMap(chips) {
     const d = sleuth.data;
@@ -2537,10 +2559,18 @@
       const lastDay = fmtDate(new Date(new Date(d.facts_lock) - 1).toISOString());
       body.append(el("p", { className: "note-text", textContent: d.facts_locked
         ? "Fact files are locked \u2014 your answers are now your giftee's clues."
-        : `Answer honestly: 5 of these become clues for whoever you're buying for. You can change them until the end of ${lastDay}. Answer all 10 to earn stealth points.` }));
+        : `Answer honestly: 5 of these become clues for whoever you're buying for. You can change them until the end of ${lastDay}. Answer all 8 to earn stealth points.` }));
       const form = el("form", { className: "facts", id: "factsForm" });
       for (const q of QUESTIONS) {
         const value = d.my_facts[q.id] || "";
+        if (q.menu) {
+          const picks = splitMenu(q, value);
+          form.append(el("label", {}, `${q.icon} ${q.text}`, ...menuCourses(q).map((course) =>
+            el("select", { name: `${q.id}-${course}`, disabled: d.facts_locked },
+              el("option", { value: "", textContent: `${course}\u2026` }),
+              ...q.menu[course].map((dish) => el("option", { value: dish, textContent: dish, selected: picks[course] === dish }))))));
+          continue;
+        }
         const input = q.options
           ? el("select", { name: q.id, disabled: d.facts_locked },
               el("option", { value: "", textContent: "Choose\u2026" }),
@@ -2638,12 +2668,14 @@
 
   async function saveFacts() {
     const form = $("factsForm");
-    const answers = Object.fromEntries(QUESTIONS.map((q) => [q.id, form.elements[q.id].value.trim()]));
+    const answers = Object.fromEntries(QUESTIONS.map((q) => [q.id, q.menu
+      ? joinMenu(q, Object.fromEntries(menuCourses(q).map((c) => [c, form.elements[`${q.id}-${c}`].value])))
+      : form.elements[q.id].value.trim()]));
     setStatus("factsStatus", "Saving\u2026");
     try {
       sleuth.data.my_facts = await rpc("santa_set_facts", { p_year: year, p_name: match.g, p_token: match.k, p_answers: answers });
       const blanks = Object.values(answers).filter((a) => !a).length;
-      setStatus("factsStatus", blanks ? `Saved \u2713 \u2014 answer the other ${blanks} to earn stealth points.` : "Saved \u2713 All 10 answered \u2014 nice!");
+      setStatus("factsStatus", blanks ? `Saved \u2713 \u2014 answer the other ${blanks} to earn stealth points.` : "Saved \u2713 All 8 answered \u2014 nice!");
     } catch (err) {
       setStatus("factsStatus", friendlyError(err), true);
     }
@@ -2718,9 +2750,28 @@
       const q = step.q;
       body.append(
         el("div", { className: "ob-icon", textContent: q.icon }),
-        el("div", { className: "ob-tier", textContent: `Could become clue ${q.tier} of 5` }),
+        el("div", { className: "ob-tier", textContent: `This will be clue ${q.tier} of ${CLUE_COUNT}` }),
         el("div", { className: "ob-q", id: "obTitle", textContent: q.text }));
-      if (q.options) {
+      if (q.menu) {
+        ob.menu = ob.menu || {};
+        ob.menu[q.id] = ob.menu[q.id] || splitMenu(q, ob.answers[q.id]);
+        const picks = ob.menu[q.id];
+        for (const course of menuCourses(q)) {
+          const row = el("div", { className: "ob-choices ob-menu" });
+          for (const dish of q.menu[course]) {
+            const button = el("button", { className: "ob-choice", type: "button", textContent: dish });
+            button.setAttribute("aria-pressed", String(picks[course] === dish));
+            button.addEventListener("click", () => {
+              picks[course] = dish;
+              ob.answers[q.id] = joinMenu(q, picks);
+              play("note", 659.25);
+              renderOnboarding();
+            });
+            row.append(button);
+          }
+          body.append(el("div", { className: "ob-course", textContent: course }), row);
+        }
+      } else if (q.options) {
         const grid = el("div", { className: "ob-choices" });
         for (const option of q.options) {
           const button = el("button", { className: "ob-choice", type: "button", textContent: option });
