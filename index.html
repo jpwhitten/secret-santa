@@ -7,7 +7,7 @@
 <title>Secret Santa</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Mountains+of+Christmas:wght@700&display=swap" rel="stylesheet">
 <style>
   :root {
     --red: #b91c1c;
@@ -116,7 +116,7 @@
     transform: translateX(-50%);
     transform-origin: bottom center;
   }
-  #confetti { z-index: 5; }
+  #confetti { z-index: 10; }  /* above the office, so the reveal confetti shows there too */
 
   /* Footer: a red ribbon banner with forked tails tucked behind it */
   .footer {
@@ -202,7 +202,7 @@
 
   @media (max-width: 500px) { .moon { top: 118px; right: 8vw; } }
 
-  /* ---------- Santa Sleuth (game panel) ---------- */
+  /* ---------- Santa Sleuth: forms and lists inside the case-file folder ---------- */
   .facts label { display: block; margin: 0 0 14px; font: bold 14px Arial, Helvetica, sans-serif; color: #374151; }
   .facts select, .facts input {
     display: block;
@@ -227,33 +227,376 @@
     cursor: pointer;
   }
   .big-btn:disabled { opacity: .45; cursor: default; }
-  .clue { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; padding: 12px; border: 1px dashed #e2cf94; border-radius: 12px; background: #fff; }
-  .clue .num { flex: none; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--red); color: #fff; font: bold 15px Arial, Helvetica, sans-serif; }
-  .clue.locked { background: #faf5e6; color: #6b7280; }
-  .clue.locked .num { background: #9ca3af; }
-  .clue .q { font-size: 13px; color: #6b7280; }
-  .clue .a { margin-top: 2px; font-size: 18px; font-weight: bold; color: #1f2937; overflow-wrap: anywhere; }
-  .clue.quiet .a { font-weight: normal; font-style: italic; color: #6b7280; }
-  .suspects { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; margin-bottom: 14px; }
-  .suspect { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 6px; border: 1px solid #e2cf94; border-radius: 12px; background: #fff; }
-  .suspect .who { padding: 2px 4px; border: 0; background: none; font: bold 16px Georgia, serif; color: #1f2937; cursor: pointer; }
-  .suspect.crossed { opacity: .4; }
-  .suspect.crossed .who { text-decoration: line-through; }
-  .suspect.bet { border-color: var(--red); box-shadow: 0 0 0 2px rgba(185, 28, 28, .18); }
-  .stepper { display: flex; align-items: center; gap: 8px; }
-  .stepper button { width: 30px; height: 30px; border: 0; border-radius: 50%; background: #f3ead2; color: #7f1d1d; font: bold 17px Arial, Helvetica, sans-serif; cursor: pointer; }
+  .stepper { display: flex; align-items: center; gap: 6px; }
+  .stepper button { width: 26px; height: 26px; border: 0; border-radius: 50%; background: #f3ead2; color: #7f1d1d; font: bold 16px Arial, Helvetica, sans-serif; cursor: pointer; }
   .stepper button:disabled { opacity: .3; cursor: default; }
-  .stepper .count { min-width: 22px; text-align: center; font: bold 17px Arial, Helvetica, sans-serif; color: var(--red); }
+  .stepper .count { min-width: 18px; text-align: center; font: bold 16px Arial, Helvetica, sans-serif; color: var(--red); }
   .board { margin: 0; padding: 0; list-style: none; }
   .board li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 4px; border-bottom: 1px dashed #e2cf94; font-size: 16px; }
+  .board li.me { background: #fff7ed; }
   .board .st { font: 13px Arial, Helvetica, sans-serif; color: #6b7280; text-align: right; }
   .board .pts { font: bold 16px Arial, Helvetica, sans-serif; color: var(--red); white-space: nowrap; }
-  .rules { margin-top: 18px; font-size: 14px; color: #4b5563; }
-  .rules summary { cursor: pointer; font: bold 14px Arial, Helvetica, sans-serif; color: var(--red); }
-  .rules li { margin-bottom: 6px; }
-  .verdict { margin-bottom: 14px; padding: 14px; border: 2px solid var(--gold); border-radius: 12px; background: #fff7ed; text-align: center; }
-  .verdict .big { font-family: var(--festive); font-size: 36px; font-weight: bold; color: var(--red); }
-  #gameSheet .tab { font-size: 12px; padding: 10px 0; white-space: nowrap; }
+  .rules-list { margin: 0; padding-left: 20px; font-size: 15px; color: #374151; }
+  .rules-list li { margin-bottom: 10px; }
+  .file-facts { margin: 0; padding: 0; list-style: none; }
+  .file-facts li { padding: 8px 0; border-bottom: 1px dashed #e2cf94; }
+  .file-facts .q { font: 12px Arial, Helvetica, sans-serif; letter-spacing: 1px; text-transform: uppercase; color: #8a6d4a; }
+  .file-facts .a { font: 700 24px 'Caveat', cursive; color: #1f2937; }
+  .note-text { margin: 0 0 14px; font-size: 14px; font-style: italic; color: #6b7280; }
+
+  /* ---------- Detective's office (full screen) ---------- */
+  .office {
+    position: fixed;
+    z-index: 9;
+    inset: 0;
+    display: none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    color: #fff;
+    background-color: #3f2716;
+    background-image:
+      radial-gradient(ellipse 70% 45% at 50% 0%, rgba(255, 196, 120, .3), transparent 70%),
+      repeating-linear-gradient(90deg, rgba(0, 0, 0, .28) 0 2px, transparent 2px 118px),
+      linear-gradient(180deg, #5c3b23 0%, #43291a 100%);
+    background-attachment: local;
+  }
+  .office.open { display: block; animation: step-inside .6s ease-out; }
+  .office::after {
+    content: "";
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    pointer-events: none;
+    box-shadow: inset 0 0 200px 50px rgba(0, 0, 0, .6);
+  }
+  .office-inner { position: relative; z-index: 1; max-width: 1060px; margin: 0 auto; padding: 84px 16px 0; }
+  @media (max-width: 700px) { .office-inner { padding-top: 150px; } }  /* clear the hanging "Outside" tag */
+  .office-exit { left: 26px; }
+
+  .case-head { text-align: center; }
+  .case-head h2 {
+    margin: 6px 0 0;
+    font-family: var(--festive);
+    font-size: clamp(46px, 12vw, 76px);
+    line-height: 1.05;
+    text-shadow: 0 3px 0 var(--red-dark), 0 0 30px rgba(255, 220, 150, .35);
+  }
+  .case-sub { max-width: 560px; margin: 8px auto 0; font-style: italic; color: #fde9c7; }
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 14px 0 18px; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 1px solid rgba(253, 230, 138, .4);
+    border-radius: 10px;
+    background: rgba(20, 10, 4, .55);
+    font: 13px Arial, Helvetica, sans-serif;
+    color: var(--gold-light);
+  }
+  .pips { display: inline-flex; gap: 4px; }
+  .pips i { width: 10px; height: 10px; border: 1px solid rgba(255, 255, 255, .45); border-radius: 50%; background: rgba(255, 255, 255, .15); }
+  .pips i.on { border-color: #86efac; background: #22c55e; box-shadow: 0 0 6px #22c55e; }
+
+  .pin {
+    position: absolute;
+    z-index: 2;
+    top: -7px;
+    left: 50%;
+    width: 14px;
+    height: 14px;
+    margin-left: -7px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #ff9a9a, #dc2626 45%, #7f1d1d);
+    box-shadow: 0 3px 3px rgba(0, 0, 0, .45);
+  }
+  .wall-notes { display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-bottom: 22px; }
+  .wall-note {
+    position: relative;
+    padding: 14px 16px 8px;
+    border: 0;
+    background: #fff8dc;
+    color: var(--red-dark);
+    font: 700 22px 'Caveat', cursive;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, .4);
+    transform: rotate(var(--r, -2deg));
+    cursor: pointer;
+    transition: transform .2s;
+  }
+  .wall-note:hover { transform: rotate(0) scale(1.05); }
+
+  /* The corkboard: wooden frame, speckled cork, red string drawn behind the pinned notes */
+  .corkboard {
+    position: relative;
+    padding: 30px 22px 28px;
+    border: 14px solid #6b4423;
+    border-radius: 6px;
+    background-color: #b98a55;
+    background-image:
+      radial-gradient(#8f6234 1px, transparent 1.6px),
+      radial-gradient(#d8ad78 1px, transparent 1.6px),
+      radial-gradient(#7d532b .8px, transparent 1.3px);
+    background-position: 0 0, 3px 4px, 6px 2px;
+    background-size: 7px 7px, 9px 9px, 13px 13px;
+    box-shadow: inset 0 0 30px rgba(60, 30, 10, .55), 0 0 0 3px #4a2c17, 0 18px 40px rgba(0, 0, 0, .55);
+  }
+  .strings { position: absolute; z-index: 3; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .evidence {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "prime prime" "c1 c2" "c3 c4" "c5 c6";
+    gap: 22px 16px;
+    align-items: start;
+  }
+  @media (min-width: 760px) {
+    .evidence {
+      grid-template-columns: 1fr minmax(220px, 250px) 1fr;
+      grid-template-areas: "c1 prime c2" "c3 prime c4" "c5 prime c6";
+      column-gap: 40px;
+    }
+  }
+  .c1 { grid-area: c1; } .c2 { grid-area: c2; } .c3 { grid-area: c3; }
+  .c4 { grid-area: c4; } .c5 { grid-area: c5; } .c6 { grid-area: c6; }
+  .evidence .prime { grid-area: prime; justify-self: center; align-self: center; }
+
+  .clue-note {
+    position: relative;
+    padding: 16px 14px 12px;
+    background: #fffbea;
+    color: #3b2a1a;
+    box-shadow: 0 8px 14px rgba(0, 0, 0, .35);
+    transform: rotate(var(--r, 0deg));
+  }
+  .clue-note .icon { font-size: 22px; line-height: 1; }
+  .clue-note .q { margin: 4px 0; font: 11px Arial, Helvetica, sans-serif; letter-spacing: 1px; text-transform: uppercase; color: #8a6d4a; }
+  .clue-note .a { font: 700 26px/1.05 'Caveat', cursive; color: #1f2937; overflow-wrap: anywhere; }
+  .clue-note.quiet .a { font-size: 21px; color: #6b7280; }
+  .clue-note.locked { background: #e6d6b5; color: #7a6a55; }
+  .clue-note.locked .a { font-size: 21px; color: #7a6a55; }
+  .clue-note.tip { align-self: center; background: #fde68a; }
+  .clue-note.tip .a { font-size: 24px; color: var(--red-dark); }
+  .clue-note.fresh { animation: pin-drop .7s cubic-bezier(.3, 1.5, .5, 1) both; }
+
+  .polaroid {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px;
+    background: #fff;
+    color: #1f2937;
+    box-shadow: 0 8px 14px rgba(0, 0, 0, .4);
+    transform: rotate(var(--r, 0deg));
+  }
+  .polaroid .photo {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    aspect-ratio: 1;
+    overflow: hidden;
+    background-color: var(--bg, #374151);
+    background-image: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .25), transparent 60%);
+    color: #fff;
+    font: 700 32px Georgia, serif;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, .35);
+  }
+  .suspect-grid .photo { cursor: pointer; }
+  .polaroid .cap { margin-top: 6px; font: 700 21px/1 'Caveat', cursive; text-align: center; }
+  .polaroid .sub { margin-top: 2px; font: 700 16px 'Caveat', cursive; color: var(--red); }
+  .polaroid.prime { width: min(240px, 66vw); box-shadow: 0 0 0 4px var(--gold), 0 14px 26px rgba(0, 0, 0, .5); }
+  .polaroid.prime .photo { font-size: 76px; }
+  .polaroid.prime .cap { font-size: 28px; }
+  .polaroid.bet { box-shadow: 0 0 0 3px #dc2626, 0 8px 14px rgba(0, 0, 0, .4); }
+  .polaroid.bet > .pin { display: none; }
+  .polaroid.crossed .photo { filter: grayscale(.7); }
+  .polaroid.crossed .photo::after {
+    content: "";
+    position: absolute;
+    inset: 6%;
+    background:
+      linear-gradient(45deg, transparent 45%, #dc2626 45% 53%, transparent 53%),
+      linear-gradient(-45deg, transparent 45%, #dc2626 45% 53%, transparent 53%);
+  }
+  .pin-cluster { position: absolute; z-index: 2; top: -6px; left: 6px; right: 6px; display: flex; flex-wrap: wrap; justify-content: center; gap: 1px; }
+  .pin-cluster i { width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff9a9a, #dc2626 45%, #7f1d1d); box-shadow: 0 2px 2px rgba(0, 0, 0, .4); }
+  .polaroid .stepper { margin-top: 6px; }
+  .mini-stamp {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    top: 42%;
+    padding: 2px 8px;
+    border: 3px solid #b91c1c;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, .8);
+    color: #b91c1c;
+    font: 900 18px 'Arial Black', Impact, sans-serif;
+    letter-spacing: 2px;
+    transform: translate(-50%, -50%) rotate(-14deg);
+  }
+  .prime .mini-stamp { font-size: 30px; }
+
+  .suspects-title {
+    position: relative;
+    z-index: 1;
+    display: table;
+    margin: 34px auto 16px;
+    padding: 6px 20px;
+    background: #fffbea;
+    color: var(--red-dark);
+    font: 700 24px 'Caveat', cursive;
+    letter-spacing: 3px;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, .35);
+    transform: rotate(-1.5deg);
+  }
+  .suspect-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, 112px); justify-content: center; gap: 22px 14px; }
+  @media (max-width: 420px) { .suspect-grid { grid-template-columns: repeat(auto-fill, 100px); } }
+  .stamp {
+    position: absolute;
+    z-index: 4;
+    right: 14px;
+    bottom: 16px;
+    padding: 4px 14px;
+    border: 5px double #b91c1c;
+    border-radius: 6px;
+    background: rgba(255, 250, 240, .35);
+    color: #b91c1c;
+    font: 900 clamp(20px, 5vw, 34px) 'Arial Black', Impact, sans-serif;
+    letter-spacing: 3px;
+    transform: rotate(-12deg);
+    pointer-events: none;
+  }
+  .stamp.slam { animation: slam .45s cubic-bezier(.2, 1.4, .4, 1) both; }
+
+  .close-case {
+    position: relative;
+    display: block;
+    margin: 28px auto 0;
+    padding: 14px 34px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(#ef4444, #b91c1c);
+    color: #fff;
+    font: 700 clamp(19px, 5vw, 25px) Georgia, serif;
+    box-shadow: 0 7px 0 #7f1d1d, 0 14px 24px rgba(0, 0, 0, .45);
+    cursor: pointer;
+    transition: transform .1s, box-shadow .1s;
+  }
+  .close-case:active { transform: translateY(4px); box-shadow: 0 3px 0 #7f1d1d, 0 8px 16px rgba(0, 0, 0, .45); }
+  .close-case:disabled { opacity: .55; cursor: default; }
+  .case-status { min-height: 1.3em; margin: 12px 0 0; text-align: center; font-style: italic; color: #fde9c7; }
+  .case-status.error { color: #fca5a5; }
+
+  /* Desk along the bottom, with (for now purely decorative) props */
+  .desk { margin-top: 40px; }
+  .desk-props { position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 18px 30px; padding: 0 12px; }
+  .desk-top { height: 46px; margin: 0 -16px; border-top: 10px solid #8b5a2b; background: linear-gradient(#6b4423, #3f2716); box-shadow: 0 -6px 18px rgba(0, 0, 0, .35); }
+  .prop { position: relative; }
+  .books { display: flex; flex-direction: column; align-items: center; }
+  .book {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 26px;
+    margin-top: -1px;
+    border-radius: 3px;
+    color: var(--gold-light);
+    font: 700 11px Georgia, serif;
+    letter-spacing: 2px;
+    box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .25), 0 2px 3px rgba(0, 0, 0, .3);
+  }
+  .book:nth-child(1) { width: 140px; background: #1e3a5f; }
+  .book:nth-child(2) { width: 160px; background: #7f1d1d; }
+  .book:nth-child(3) { width: 150px; background: #14532d; }
+  .mug {
+    width: 66px;
+    height: 72px;
+    padding-top: 20px;
+    border-radius: 4px 4px 14px 14px;
+    background: #fffaf0;
+    color: var(--red);
+    font: 700 8px/1.2 Arial, Helvetica, sans-serif;
+    letter-spacing: .5px;
+    text-align: center;
+    box-shadow: inset -6px 0 8px rgba(0, 0, 0, .12);
+  }
+  .mug::after { content: ""; position: absolute; top: 16px; right: -18px; width: 16px; height: 26px; border: 6px solid #fffaf0; border-left: 0; border-radius: 0 14px 14px 0; }
+  .mug .steam { position: absolute; top: -34px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
+  .mug .steam i { width: 6px; height: 26px; border-radius: 6px; background: rgba(255, 255, 255, .35); filter: blur(2px); animation: steam 2.4s ease-in-out infinite; }
+  .mug .steam i:nth-child(2) { animation-delay: .8s; }
+  .mug .steam i:nth-child(3) { animation-delay: 1.6s; }
+  .magnifier { display: inline-block; font-size: 52px; line-height: 1; transform: rotate(-30deg); }
+  .plate { width: 100px; height: 66px; }
+  .plate::before { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 22px; border-radius: 50%; background: radial-gradient(ellipse, #fff 55%, #dfe7ef 72%, #c9d3dd); box-shadow: 0 3px 4px rgba(0, 0, 0, .3); }
+  .cookie {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    width: 54px;
+    height: 54px;
+    margin-left: -27px;
+    border-radius: 50%;
+    background-color: #d39b4f;
+    background-image:
+      radial-gradient(circle at 30% 30%, #4a2c17 0 4px, transparent 5px),
+      radial-gradient(circle at 66% 38%, #4a2c17 0 4px, transparent 5px),
+      radial-gradient(circle at 44% 70%, #4a2c17 0 3.5px, transparent 4.5px),
+      radial-gradient(circle at 74% 72%, #4a2c17 0 3px, transparent 4px),
+      radial-gradient(circle at 40% 35%, #e7b56a, #c9873a 75%);
+    box-shadow: inset -3px -4px 0 rgba(0, 0, 0, .15);
+  }
+  .globe { width: 74px; height: 92px; }
+  .globe .glass {
+    position: relative;
+    display: grid;
+    place-items: end center;
+    width: 74px;
+    height: 74px;
+    padding-bottom: 8px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, .55);
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .7), rgba(180, 220, 255, .25) 40%, rgba(40, 80, 140, .6));
+    font-size: 30px;
+    line-height: 1;
+  }
+  .globe .flakes {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(#fff 1.2px, transparent 1.6px), radial-gradient(#fff 1px, transparent 1.4px);
+    background-position: 0 0, 5px 6px;
+    background-size: 14px 14px, 9px 11px;
+    opacity: .4;
+  }
+  .globe .base { display: block; width: 64px; height: 16px; margin: -5px auto 0; border-radius: 4px 4px 8px 8px; background: linear-gradient(#8b5a2b, #5b3a1e); }
+  .lamp { width: 96px; height: 126px; }
+  .lamp .shade { position: absolute; top: 0; left: 18px; width: 66px; height: 38px; background: linear-gradient(#ef4444, #991b1b); clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); }
+  .lamp .arm { position: absolute; top: 34px; left: 48px; width: 6px; height: 80px; background: linear-gradient(90deg, #a8873a, #e0bb5a, #a8873a); transform: rotate(14deg); transform-origin: top center; }
+  .lamp .base { position: absolute; bottom: 0; left: 22px; width: 62px; height: 12px; border-radius: 6px 6px 3px 3px; background: linear-gradient(#e0bb5a, #a8873a); }
+  .lamp .glow { position: absolute; top: 36px; left: -30px; width: 160px; height: 110px; background: radial-gradient(ellipse at 50% 0%, rgba(255, 220, 140, .55), transparent 70%); pointer-events: none; }
+
+  /* Manila case-file folder for the fact file, leaderboard and rules */
+  .case-modal { position: fixed; z-index: 11; inset: 0; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(10, 5, 2, .62); }
+  .case-modal.open { display: flex; }
+  .folder { position: relative; width: min(520px, 100%); }
+  .folder-tab { display: inline-block; margin-left: 18px; padding: 6px 16px; border-radius: 8px 8px 0 0; background: #e9c98b; color: #7a5a20; font: 700 13px Arial, Helvetica, sans-serif; letter-spacing: 2px; }
+  .case-card {
+    position: relative;
+    max-height: 78vh;
+    max-height: 78dvh;
+    overflow-y: auto;
+    padding: 18px 20px 20px;
+    border: 10px solid #e9c98b;
+    border-radius: 0 6px 6px 6px;
+    background: #fffaf0;
+    color: #1f2937;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, .6);
+  }
+  .case-card h3 { margin: 0 44px 10px 0; font-family: var(--festive); font-size: 32px; color: var(--red); }
+  .case-close { position: absolute; top: 10px; right: 10px; }
 
   /* ---------- Heading ---------- */
   .eyebrow { font: 12px Arial, Helvetica, sans-serif; letter-spacing: 5px; color: var(--gold-light); }
@@ -684,6 +1027,14 @@
   }
 
   /* ---------- Keyframes ---------- */
+  @keyframes step-inside { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: none; } }
+  @keyframes pin-drop {
+    0% { opacity: 0; transform: translateY(-50px) rotate(calc(var(--r, 0deg) - 14deg)) scale(1.2); }
+    60% { opacity: 1; }
+    100% { opacity: 1; transform: rotate(var(--r, 0deg)); }
+  }
+  @keyframes slam { 0% { opacity: 0; transform: rotate(-12deg) scale(2.6); } 100% { opacity: 1; transform: rotate(-12deg) scale(1); } }
+  @keyframes steam { 0% { opacity: 0; transform: translateY(10px) scaleY(.6); } 40% { opacity: 1; } 100% { opacity: 0; transform: translateY(-16px) scaleY(1.2); } }
   @keyframes rustle {
     0%, 100% { transform: translateX(-50%) rotate(0); }
     25% { transform: translateX(-50%) rotate(-4deg); }
@@ -1000,49 +1351,74 @@
   </div>
 </section>
 
-<div class="backdrop" id="gameBackdrop"></div>
-<section class="sheet" id="gameSheet" role="dialog" aria-modal="true" aria-labelledby="gameTitle">
-  <div class="stripe"></div>
-  <div class="sheet-head">
-    <h2 id="gameTitle">Santa Sleuth</h2>
-    <button class="close" id="gameClose" type="button" aria-label="Close">&times;</button>
-  </div>
-  <div class="tabs" role="tablist">
-    <button class="tab" data-tab="clues" role="tab" type="button">&#128269; Clues</button>
-    <button class="tab" data-tab="suspects" role="tab" type="button">&#127919; Suspects</button>
-    <button class="tab" data-tab="facts" role="tab" type="button">&#128203; My facts</button>
-    <button class="tab" data-tab="board" role="tab" type="button">&#127942; Board</button>
-  </div>
-  <div class="panel" data-panel="clues" role="tabpanel">
-    <div id="cluesBody"></div>
-    <details class="rules">
-      <summary>How to play</summary>
-      <ul>
-        <li><strong>Find your Santa.</strong> Five of your Santa's fact-file answers unlock as clues on <span id="ruleDates"></span>.</li>
-        <li><strong>Bet 10 tokens</strong> on suspects &mdash; all on one, or spread them. <strong>Lock in early</strong> for a bigger multiplier: &times;3 before clue 1, then &times;2.5, &times;2, &times;1.5, &times;1.2 and &times;1 after clue 5. Never locking counts &times;0.5.</li>
-        <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every token your giftee puts on you. (If they don't play, you get 5. No complete fact file, no stealth points.)</li>
-        <li><strong>Fact files must be true.</strong> Out loud, though, everyone denies everything &mdash; lying is part of the game!</li>
-        <li>Your Santa and the scores are revealed on Christmas Day.</li>
-      </ul>
-    </details>
-  </div>
-  <div class="panel" data-panel="suspects" role="tabpanel" hidden>
-    <p class="note" id="tokenNote"></p>
-    <div class="suspects" id="suspectGrid"></div>
-    <button class="big-btn" id="lockBtn" type="button">&#128274; Lock in my guess</button>
-    <p class="status" id="guessStatus"></p>
-  </div>
-  <div class="panel" data-panel="facts" role="tabpanel" hidden>
-    <p class="note" id="factsNote"></p>
-    <form class="facts" id="factsForm"></form>
-    <button class="big-btn" id="factsSave" type="button">Save my fact file</button>
-    <p class="status" id="factsStatus"></p>
-  </div>
-  <div class="panel" data-panel="board" role="tabpanel" hidden>
-    <p class="note" id="boardNote"></p>
-    <ol class="board" id="boardList"></ol>
+<section class="office" id="office" aria-label="Santa Sleuth: the detective's office" aria-hidden="true">
+  <svg class="lights" id="officeLights" aria-hidden="true"></svg>
+  <button class="hanger tag-hanger office-exit" id="officeExit" type="button">
+    <span class="string"></span>
+    <span class="tag-wrap"><span class="tag-face"><span class="hole"></span>&larr; Outside</span></span>
+  </button>
+
+  <div class="office-inner">
+    <header class="case-head">
+      <div class="eyebrow">CAN YOU FIGURE IT OUT?</div>
+      <h2>Santa Sleuth</h2>
+      <p class="case-sub" id="caseSub"></p>
+    </header>
+    <div class="chips" id="caseChips"></div>
+    <div class="wall-notes">
+      <button class="wall-note" id="openFacts" type="button" style="--r:-3deg"><span class="pin"></span><span id="openFactsLabel">&#128193; My fact file</span></button>
+      <button class="wall-note" id="openBoard" type="button" style="--r:2deg"><span class="pin"></span>&#127942; Leaderboard</button>
+      <button class="wall-note" id="openRules" type="button" style="--r:-1deg"><span class="pin"></span>&#128220; How to play</button>
+    </div>
+
+    <div class="corkboard" id="corkboard">
+      <svg class="strings" id="strings" aria-hidden="true"></svg>
+      <div class="evidence" id="evidence"></div>
+      <div class="suspects-title">SUSPECTS</div>
+      <div class="suspect-grid" id="suspectGrid"></div>
+      <div class="stamp" id="stamp" hidden></div>
+    </div>
+
+    <button class="close-case" id="closeCase" type="button">
+      <span class="snowcap" data-max="10" style="left:10px;right:10px"></span><span id="closeCaseLabel">Close the case</span>
+    </button>
+    <p class="case-status" id="caseStatus"></p>
+
+    <div class="desk" aria-hidden="true">
+      <div class="desk-props">
+        <div class="prop books"><span class="book">CLUES</span><span class="book">GOOD BEHAVIOUR?</span><span class="book">TOP SECRET</span></div>
+        <div class="prop mug"><span class="steam"><i></i><i></i><i></i></span>&#127876;<br>SANTA'S<br>DETECTIVE<br>CREW</div>
+        <div class="prop"><span class="magnifier">&#128269;</span></div>
+        <div class="prop plate"><span class="cookie"></span></div>
+        <div class="prop globe"><span class="glass"><span class="flakes"></span>&#127968;</span><span class="base"></span></div>
+        <div class="prop lamp"><span class="glow"></span><span class="shade"></span><span class="arm"></span><span class="base"></span></div>
+      </div>
+      <div class="desk-top"></div>
+    </div>
   </div>
 </section>
+
+<div class="case-modal" id="caseModal" role="dialog" aria-modal="true" aria-labelledby="caseTitle">
+  <div class="folder">
+    <div class="folder-tab" id="folderTab">CASE FILE</div>
+    <div class="case-card">
+      <button class="close case-close" id="caseClose" type="button" aria-label="Close">&times;</button>
+      <h3 id="caseTitle"></h3>
+      <div id="caseBody"></div>
+    </div>
+  </div>
+</div>
+
+<template id="rulesTpl">
+  <ol class="rules-list">
+    <li><strong>Find your Santa.</strong> Five of your Santa's fact-file answers get pinned to your board as clues on <span class="rule-dates"></span>.</li>
+    <li><strong>You have 10 pins.</strong> Stick them in suspects &mdash; all on one, or spread them. Your Prime Suspect is whoever has the most.</li>
+    <li><strong>Close the case early for more points:</strong> &times;3 before clue 1, then &times;2.5, &times;2, &times;1.5, &times;1.2 and &times;1 after clue 5. Never closing it counts &times;0.5.</li>
+    <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every pin your giftee puts in you. (If they don't play, you get 5. No complete fact file, no stealth points.)</li>
+    <li><strong>Fact files must be true.</strong> Out loud, though, everyone denies everything &mdash; lying is part of the game!</li>
+    <li>Your Santa and the scores are revealed on Christmas Day. &#127876;</li>
+  </ol>
+</template>
 <canvas id="confetti"></canvas>
 
 <script>
@@ -1454,7 +1830,8 @@
     addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
       if ($("sheet").classList.contains("open")) closeSheet();
-      if ($("gameSheet").classList.contains("open")) closeGame();
+      if ($("caseModal").classList.contains("open")) closeCase();
+      else if ($("office").classList.contains("open")) closeOffice();
     });
 
     if (match.k) {
@@ -1483,14 +1860,14 @@
   // The server works out the clues (from the pairings it holds), enforces the dates and token rules,
   // and only scores the game once the host runs `SecretSanta.py --reveal`.
   const QUESTIONS = [
-    { id: "q1", text: "Tea, coffee, or neither?", options: ["Tea", "Coffee", "Both", "Neither"] },
-    { id: "q2", text: "Your go-to Christmas film?" },
-    { id: "q3", text: "Ever broken a bone? Which?", placeholder: "e.g. No / Left wrist" },
-    { id: "q4", text: "Brussels sprouts?", options: ["Love them", "Hate them", "Tolerate them"] },
-    { id: "q5", text: "The furthest place you've been?" },
-    { id: "q6", text: "Something you were obsessed with as a kid?" },
-    { id: "q7", text: "A hidden talent?" },
-    { id: "q8", text: "Real tree or fake tree?", options: ["Real", "Fake", "No tree!"] },
+    { id: "q1", icon: "\u2615", text: "Tea, coffee, or neither?", options: ["Tea", "Coffee", "Both", "Neither"] },
+    { id: "q2", icon: "\u{1F3AC}", text: "Your go-to Christmas film?" },
+    { id: "q3", icon: "\u{1F9B4}", text: "Ever broken a bone? Which?", placeholder: "e.g. No / Left wrist" },
+    { id: "q4", icon: "\u{1F96C}", text: "Brussels sprouts?", options: ["Love them", "Hate them", "Tolerate them"] },
+    { id: "q5", icon: "\u{1F30D}", text: "The furthest place you've been?" },
+    { id: "q6", icon: "\u{1F9F8}", text: "Something you were obsessed with as a kid?" },
+    { id: "q7", icon: "\u2B50", text: "A hidden talent?" },
+    { id: "q8", icon: "\u{1F384}", text: "Real tree or fake tree?", options: ["Real", "Fake", "No tree!"] },
   ];
   const QUESTION_TEXT = Object.fromEntries(QUESTIONS.map((q) => [q.id, q.text]));
   const MULTIPLIERS = [3, 2.5, 2, 1.5, 1.2, 1];  // by clues released when you lock in
@@ -1521,99 +1898,197 @@
     return "Couldn't save — check your connection and try again.";
   }
 
+  let caseKind = null;  // which folder (facts / board / rules) is open, if any
+
   async function loadGame() {
     sleuth.data = await rpc("santa_get_game", { p_year: year, p_name: match.g, p_token: match.k });
     sleuth.draft = { ...sleuth.data.guess.tokens };
-    renderClues();
-    renderSuspects();
-    renderFacts();
-    renderBoard();
+    if ($("office").classList.contains("open")) renderOffice();
+    if (caseKind === "board") renderCaseBoard();
     updateGameDot();
   }
 
-  // Red dot on the Detective tag when there's a clue (or the reveal) you haven't looked at yet
+  // Red dot on the Detective tag when there's a clue (or the reveal) you haven't seen yet
   const newestNews = () => (sleuth.data.revealed ? 99 : sleuth.data.released);
+  function seenNews() {
+    try { return Number(localStorage.getItem(SEEN_KEY) || 0); } catch { return 0; }
+  }
   function updateGameDot() {
-    let seen = 0;
-    try { seen = Number(localStorage.getItem(SEEN_KEY) || 0); } catch {}
-    $("gameDot").hidden = newestNews() <= seen;
+    $("gameDot").hidden = newestNews() <= seenNews();
   }
 
-  function clueCard(num, question, answer) {
-    return el("div", { className: `clue${answer ? "" : " quiet"}` },
-      el("div", { className: "num", textContent: num }),
-      el("div", {},
-        el("div", { className: "q", textContent: question }),
-        el("div", { className: "a", textContent: answer || "\u{1F910} Your Santa is staying suspiciously quiet…" })));
+  // A fixed tilt and photo colour per name, so the board looks hand-pinned but doesn't shuffle on every redraw
+  function hashOf(text) {
+    let h = 0;
+    for (const ch of text) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+    return h;
+  }
+  const PHOTO_COLOURS = ["#b91c1c", "#166534", "#1d4ed8", "#7c3aed", "#c2410c", "#0f766e", "#be185d", "#854d0e"];
+  const initials = (name) => name.split(/\s+/).map((word) => word[0]).join("").slice(0, 2).toUpperCase();
+
+  function polaroid(name, { prime = false, caption = name, sub = "" } = {}) {
+    const h = hashOf(name);
+    const card = el("div", { className: `polaroid${prime ? " prime" : ""}` });
+    card.style.setProperty("--r", `${prime ? -2 : (h % 7) - 3}deg`);
+    card.style.setProperty("--bg", PHOTO_COLOURS[h % PHOTO_COLOURS.length]);
+    card.append(
+      el("span", { className: "pin" }),
+      el("div", { className: "photo", textContent: name === "?" ? "?" : initials(name) }),
+      el("div", { className: "cap", textContent: caption }));
+    if (sub) card.append(el("div", { className: "sub", textContent: sub }));
+    return card;
   }
 
-  function renderClues() {
+  function primeSuspect() {
+    let best = null;
+    for (const [name, n] of Object.entries(sleuth.draft)) if (!best || n > sleuth.draft[best]) best = name;
+    return best;
+  }
+
+  function renderOffice() {
     const d = sleuth.data;
-    const body = $("cluesBody");
-    body.replaceChildren();
-    $("ruleDates").textContent = d.clue_dates.map(fmtDate).join(", ");
+    const locked = d.guess.locked;
+    const left = TOKENS - tokensUsed();
 
+    $("caseSub").textContent = d.revealed
+      ? `Case solved, ${match.g}! Here's who's been buying for you.`
+      : `${match.g}, study the evidence and find your Santa. The earlier you close the case, the more points you earn!`;
+
+    const chips = $("caseChips");
+    chips.replaceChildren();
+    const pips = el("span", { className: "pips" }, ...[1, 2, 3, 4, 5].map((n) => el("i", { className: n <= d.released ? "on" : "" })));
+    chips.append(el("span", { className: "chip" }, `Clue ${Math.min(d.released, 5)} of 5`, pips));
     if (d.revealed) {
       const mine = d.board.find((row) => row.name === match.g);
-      body.append(el("div", { className: "verdict" },
-        el("div", { textContent: "Your Secret Santa was…" }),
-        el("div", { className: "big", textContent: d.santa || "?" }),
-        mine ? el("div", { textContent: `You scored ${mine.total} points (\u{1F50D} ${mine.detective} + \u{1F3AD} ${mine.stealth})` }) : ""));
-      body.append(el("p", { className: "note", textContent: `${d.santa}'s full fact file:` }));
-      for (const q of QUESTIONS) body.append(clueCard("✓", q.text, d.santa_facts[q.id] || "(left blank)"));
-      return;
+      if (mine) chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} You scored ${mine.total} points` }));
+    } else if (locked) {
+      const c = d.guess.clues_at_lock;
+      chips.append(el("span", { className: "chip", textContent: `\u{1F512} Closed ${c ? `after clue ${c}` : "before any clues"} \u00b7 \u00d7${MULTIPLIERS[Math.min(c, 5)]}` }));
+    } else {
+      chips.append(el("span", { className: "chip", textContent: `\u{1F4CC} ${left} of ${TOKENS} pins left` }));
+      chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} Close now: \u00d7${currentMultiplier()}` }));
     }
-    if (!d.released) {
-      body.append(el("p", { className: "note", textContent: `Clues about your Santa start on ${fmtDate(d.clue_dates[0])}. Fill in your own fact file before then!` }));
+
+    // Evidence: the prime suspect in the middle, clue notes pinned around it
+    const evidence = $("evidence");
+    evidence.replaceChildren();
+    if (d.revealed) {
+      const culprit = polaroid(d.santa || "?", { prime: true, sub: "\u2605 The culprit" });
+      culprit.append(el("span", { className: "mini-stamp", textContent: "GUILTY" }));
+      evidence.append(culprit);
+    } else {
+      const best = primeSuspect();
+      evidence.append(best
+        ? polaroid(best, { prime: true, sub: "\u2605 Prime suspect" })
+        : polaroid("?", { prime: true, caption: "No suspect yet", sub: "Pin someone below!" }));
     }
+    const seen = seenNews();
+    const TILT = [-3, 2.5, 2, -2.5, -1.5];
     for (let n = 1; n <= 5; n++) {
       const clue = d.clues.find((c) => c.n === n);
+      const note = el("div", { className: `clue-note c${n}` }, el("span", { className: "pin" }));
+      note.style.setProperty("--r", `${TILT[n - 1]}deg`);
       if (clue) {
-        body.append(clueCard(n, QUESTION_TEXT[clue.q], clue.a));
+        const q = QUESTIONS.find((x) => x.id === clue.q);
+        note.append(
+          el("div", { className: "icon", textContent: q.icon }),
+          el("div", { className: "q", textContent: `Clue ${n} \u00b7 ${q.text}` }),
+          el("div", { className: "a", textContent: clue.a || "\u{1F910} Staying suspiciously quiet\u2026" }));
+        if (!clue.a) note.classList.add("quiet");
+        if (!d.revealed && n > seen) {
+          note.classList.add("fresh");  // newly unlocked: drop it onto the board
+          note.style.animationDelay = `${(n - seen - 1) * 0.25}s`;
+        }
       } else {
-        const card = clueCard(n, `Unlocks ${fmtDate(d.clue_dates[n - 1])}`, "\u{1F512} Locked");
-        card.classList.add("locked");
-        body.append(card);
+        note.classList.add("locked");
+        note.append(
+          el("div", { className: "icon", textContent: "\u{1F512}" }),
+          el("div", { className: "q", textContent: `Clue ${n}` }),
+          el("div", { className: "a", textContent: `Unlocks ${fmtDate(d.clue_dates[n - 1])}` }));
       }
+      evidence.append(note);
     }
-  }
+    const tip = el("div", { className: "clue-note c6 tip" }, el("span", { className: "pin" }), el("div", { className: "a", textContent: "Anything is a clue! \u{1F384}" }));
+    tip.style.setProperty("--r", "3deg");
+    evidence.append(tip);
 
-  function renderSuspects() {
-    const d = sleuth.data;
-    const locked = d.guess.locked || d.revealed;
+    // Suspects: polaroids you stick pins into (tap the photo to cross someone out)
     const grid = $("suspectGrid");
     grid.replaceChildren();
     for (const name of d.players.filter((p) => p !== match.g)) {
       const count = sleuth.draft[name] || 0;
-      const card = el("div", { className: `suspect${sleuth.crossed.has(name) ? " crossed" : ""}${count ? " bet" : ""}` });
-      const who = el("button", { className: "who", type: "button", textContent: name, title: "Tap to cross out" });
-      who.addEventListener("click", () => {
-        if (sleuth.crossed.has(name)) sleuth.crossed.delete(name);
-        else sleuth.crossed.add(name);
-        try { localStorage.setItem(CROSSED_KEY, JSON.stringify([...sleuth.crossed])); } catch {}
-        renderSuspects();
-      });
-      const minus = el("button", { type: "button", textContent: "−", disabled: locked || !count });
-      const plus = el("button", { type: "button", textContent: "+", disabled: locked || tokensUsed() >= TOKENS });
-      minus.setAttribute("aria-label", `One less token on ${name}`);
-      plus.setAttribute("aria-label", `One more token on ${name}`);
-      minus.addEventListener("click", () => changeTokens(name, -1));
-      plus.addEventListener("click", () => changeTokens(name, 1));
-      card.append(who, el("div", { className: "stepper" }, minus, el("span", { className: "count", textContent: count }), plus));
+      const card = polaroid(name);
+      if (sleuth.crossed.has(name)) card.classList.add("crossed");
+      if (count) card.classList.add("bet");
+      if (d.revealed && name === d.santa) card.append(el("span", { className: "mini-stamp", textContent: "GUILTY" }));
+      card.prepend(el("div", { className: "pin-cluster" }, ...Array.from({ length: count }, () => el("i"))));
+      const photo = card.querySelector(".photo");
+      photo.title = "Tap to cross out";
+      photo.addEventListener("click", () => toggleCrossed(name));
+      if (!locked && !d.revealed) {
+        const minus = el("button", { type: "button", textContent: "\u2212", disabled: !count });
+        const plus = el("button", { type: "button", textContent: "+", disabled: left <= 0 });
+        minus.setAttribute("aria-label", `Take a pin out of ${name}`);
+        plus.setAttribute("aria-label", `Stick a pin in ${name}`);
+        minus.addEventListener("click", () => changeTokens(name, -1));
+        plus.addEventListener("click", () => changeTokens(name, 1));
+        card.append(el("div", { className: "stepper" }, minus, el("span", { className: "count", textContent: count }), plus));
+      }
       grid.append(card);
     }
 
-    if (d.revealed) {
-      $("tokenNote").textContent = "The game is over — check the Board!";
-    } else if (d.guess.locked) {
-      const c = d.guess.clues_at_lock;
-      $("tokenNote").textContent = `\u{1F512} Locked in ${c ? `after clue ${c}` : "before any clues"} — ×${MULTIPLIERS[Math.min(c, 5)]} multiplier. Good luck!`;
-    } else {
-      $("tokenNote").textContent = `${TOKENS - tokensUsed()} of ${TOKENS} tokens left. Tap a name to cross them out. Locking in now gives ×${currentMultiplier()}.`;
+    $("closeCase").hidden = locked || d.revealed;
+    $("closeCase").disabled = !tokensUsed();
+    $("closeCaseLabel").textContent = `Close the case \u{1F512} \u00d7${currentMultiplier()}`;
+    $("stamp").hidden = !(locked || d.revealed);
+    $("stamp").textContent = d.revealed ? "CASE SOLVED" : "CASE CLOSED";
+    $("openFactsLabel").textContent = d.revealed ? `\u{1F4C1} ${d.santa}'s file` : "\u{1F4C1} My fact file";
+
+    requestAnimationFrame(drawStrings);
+    setTimeout(drawStrings, 1000);  // again once any newly dropped notes have landed
+    try { localStorage.setItem(SEEN_KEY, String(newestNews())); } catch {}
+    updateGameDot();
+  }
+
+  // Red string from each unlocked clue's pin to the prime suspect's pin. It's drawn over the board,
+  // so each end gets a fresh pin head on top to look tied on.
+  function drawStrings() {
+    const svg = $("strings");
+    svg.replaceChildren();
+    const board = $("corkboard");
+    const box = board.getBoundingClientRect();
+    const target = document.querySelector("#evidence .prime > .pin");
+    if (!target || !box.width) return;
+    const ox = box.left + board.clientLeft;
+    const oy = box.top + board.clientTop;
+    const centre = (node) => {
+      const r = node.getBoundingClientRect();
+      return [r.left + r.width / 2 - ox, r.top + r.height / 2 - oy];
+    };
+    const [topX, topY] = centre(target);
+    const primeBottom = target.parentElement.getBoundingClientRect().bottom - oy - 8;
+    const ends = [];
+    for (const pin of document.querySelectorAll("#evidence .clue-note:not(.locked):not(.tip) > .pin")) {
+      const [x, y] = centre(pin);
+      // Clues beside the polaroid tie to its top pin; clues below it (the phone layout) tie to its bottom edge
+      const [px, py] = y > primeBottom ? [topX, primeBottom] : [topX, topY];
+      ends.push([x, y], [px, py]);
+      const d = `M${x} ${y} Q${(x + px) / 2} ${Math.max(y, py) + 22} ${px} ${py}`;  // a little slack in the string
+      svg.append(svgEl("path", { d, fill: "none", stroke: "rgba(0,0,0,.3)", "stroke-width": 3, transform: "translate(1 3)" }));
+      svg.append(svgEl("path", { d, fill: "none", stroke: "#c1121f", "stroke-width": 2.2, "stroke-linecap": "round" }));
     }
-    $("lockBtn").hidden = locked;
-    $("lockBtn").disabled = !tokensUsed();
-    $("lockBtn").textContent = `\u{1F512} Lock in my guess (×${currentMultiplier()})`;
+    for (const [x, y] of ends) {
+      svg.append(svgEl("circle", { cx: x, cy: y + 2, r: 7, fill: "rgba(0,0,0,.35)" }));
+      svg.append(svgEl("circle", { cx: x, cy: y, r: 7, fill: "#dc2626", stroke: "#7f1d1d", "stroke-width": 1 }));
+      svg.append(svgEl("circle", { cx: x - 2.2, cy: y - 2.2, r: 2.2, fill: "rgba(255,255,255,.6)" }));
+    }
+  }
+
+  function toggleCrossed(name) {
+    if (sleuth.crossed.has(name)) sleuth.crossed.delete(name);
+    else sleuth.crossed.add(name);
+    try { localStorage.setItem(CROSSED_KEY, JSON.stringify([...sleuth.crossed])); } catch {}
+    renderOffice();
   }
 
   function changeTokens(name, delta) {
@@ -1621,62 +2096,106 @@
     if (next < 0 || tokensUsed() + delta > TOKENS) return;
     if (next) sleuth.draft[name] = next;
     else delete sleuth.draft[name];
-    renderSuspects();
+    play("note", delta > 0 ? 659.25 : 523.25);
+    renderOffice();
     clearTimeout(sleuth.saveTimer);
-    setStatus("guessStatus", "Saving…");
+    setStatus("caseStatus", "Saving\u2026");
     sleuth.saveTimer = setTimeout(() => saveGuess(false), 600);  // batch quick taps into one save
   }
 
   async function saveGuess(lock) {
     try {
       sleuth.data.guess = await rpc("santa_set_guess", { p_year: year, p_name: match.g, p_token: match.k, p_tokens: sleuth.draft, p_lock: lock });
-      setStatus("guessStatus", lock ? "\u{1F512} Locked in. Good luck, detective!" : "Saved ✓");
-      if (lock) await loadGame();
+      setStatus("caseStatus", lock ? "\u{1F512} Case closed. Good luck, detective!" : "Saved \u2713");
+      if (lock) {
+        await loadGame();
+        renderOffice();
+        restartClass($("stamp"), "slam");
+        play("thud");
+        setTimeout(() => play("chime"), 250);
+      }
     } catch (err) {
-      setStatus("guessStatus", friendlyError(err), true);
+      setStatus("caseStatus", friendlyError(err), true);
     }
   }
 
-  function renderFacts() {
+  // ---------- The case-file folder: fact file, leaderboard, rules ----------
+  function openCase(kind) {
+    caseKind = kind;
     const d = sleuth.data;
-    const form = $("factsForm");
-    form.replaceChildren();
-    for (const q of QUESTIONS) {
-      const value = d.my_facts[q.id] || "";
-      const input = q.options
-        ? el("select", { name: q.id, disabled: d.facts_locked },
-            el("option", { value: "", textContent: "Choose…" }),
-            ...q.options.map((o) => el("option", { value: o, textContent: o, selected: o === value })))
-        : el("input", { name: q.id, value, maxLength: 80, placeholder: q.placeholder || "", disabled: d.facts_locked, autocomplete: "off" });
-      form.append(el("label", {}, q.text, input));
+    const body = $("caseBody");
+    body.replaceChildren();
+    if (kind === "facts" && d.revealed) {
+      $("folderTab").textContent = "EVIDENCE";
+      $("caseTitle").textContent = `${d.santa}'s fact file`;
+      body.append(el("ul", { className: "file-facts" }, ...QUESTIONS.map((q) => el("li", {},
+        el("div", { className: "q", textContent: `${q.icon} ${q.text}` }),
+        el("div", { className: "a", textContent: d.santa_facts[q.id] || "(left blank)" })))));
+    } else if (kind === "facts") {
+      $("folderTab").textContent = "FACT FILE";
+      $("caseTitle").textContent = "My fact file";
+      const lastDay = fmtDate(new Date(new Date(d.facts_lock) - 1).toISOString());
+      body.append(el("p", { className: "note-text", textContent: d.facts_locked
+        ? "Fact files are locked \u2014 your answers are now your giftee's clues."
+        : `Answer honestly: 5 of these become clues for whoever you're buying for. You can change them until the end of ${lastDay}. Answer all 8 to earn stealth points.` }));
+      const form = el("form", { className: "facts", id: "factsForm" });
+      for (const q of QUESTIONS) {
+        const value = d.my_facts[q.id] || "";
+        const input = q.options
+          ? el("select", { name: q.id, disabled: d.facts_locked },
+              el("option", { value: "", textContent: "Choose\u2026" }),
+              ...q.options.map((o) => el("option", { value: o, textContent: o, selected: o === value })))
+          : el("input", { name: q.id, value, maxLength: 80, placeholder: q.placeholder || "", disabled: d.facts_locked, autocomplete: "off" });
+        form.append(el("label", {}, `${q.icon} ${q.text}`, input));
+      }
+      body.append(form);
+      if (!d.facts_locked) {
+        const save = el("button", { className: "big-btn", type: "button", textContent: "Save my fact file" });
+        save.addEventListener("click", saveFacts);
+        body.append(save);
+      }
+      body.append(el("p", { className: "status", id: "factsStatus" }));
+    } else if (kind === "board") {
+      $("folderTab").textContent = "LEADERBOARD";
+      $("caseTitle").textContent = "Leaderboard";
+      body.append(el("p", { className: "note-text", id: "boardNote" }), el("ol", { className: "board", id: "boardList" }));
+      renderCaseBoard();
+    } else {
+      $("folderTab").textContent = "HOW TO PLAY";
+      $("caseTitle").textContent = "How to play";
+      body.append($("rulesTpl").content.cloneNode(true));
+      body.querySelector(".rule-dates").textContent = d.clue_dates.map(fmtDate).join(", ");
     }
-    const lastDay = fmtDate(new Date(new Date(d.facts_lock) - 1).toISOString());
-    $("factsSave").hidden = d.facts_locked;
-    $("factsNote").textContent = d.facts_locked
-      ? "Fact files are locked — your answers are now your giftee's clues."
-      : `Answer honestly: 5 of these become clues for whoever you're buying for. You can change them until the end of ${lastDay}. Answer all 8 to earn stealth points.`;
+    $("caseModal").classList.add("open");
+    $("caseClose").focus();
+  }
+
+  function closeCase() {
+    $("caseModal").classList.remove("open");
+    caseKind = null;
   }
 
   async function saveFacts() {
     const form = $("factsForm");
     const answers = Object.fromEntries(QUESTIONS.map((q) => [q.id, form.elements[q.id].value.trim()]));
-    setStatus("factsStatus", "Saving…");
+    setStatus("factsStatus", "Saving\u2026");
     try {
       sleuth.data.my_facts = await rpc("santa_set_facts", { p_year: year, p_name: match.g, p_token: match.k, p_answers: answers });
       const blanks = Object.values(answers).filter((a) => !a).length;
-      setStatus("factsStatus", blanks ? `Saved ✓ — answer the other ${blanks} to earn stealth points.` : "Saved ✓ All 8 answered — nice!");
+      setStatus("factsStatus", blanks ? `Saved \u2713 \u2014 answer the other ${blanks} to earn stealth points.` : "Saved \u2713 All 8 answered \u2014 nice!");
     } catch (err) {
       setStatus("factsStatus", friendlyError(err), true);
     }
   }
 
-  function renderBoard() {
+  function renderCaseBoard() {
     const d = sleuth.data;
-    const list = $("boardList");
-    list.replaceChildren();
+    if (!$("boardList")) return;
     $("boardNote").textContent = d.revealed
       ? "Final scores: \u{1F50D} detective + \u{1F3AD} stealth."
-      : "Scores appear on Christmas Day. For now, here's who has locked in.";
+      : "Scores appear on Christmas Day. For now, here's who has closed their case.";
+    const list = $("boardList");
+    list.replaceChildren();
     const medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
     let rank = 0;
     for (const row of d.board) {
@@ -1685,32 +2204,31 @@
       const right = d.revealed
         ? el("span", { className: "st" }, `\u{1F50D} ${row.detective} + \u{1F3AD} ${row.stealth} = `, el("span", { className: "pts", textContent: `${row.total}` }))
         : el("span", { className: "st", textContent: row.locked ? `\u{1F512} after ${row.clues_at_lock ? `clue ${row.clues_at_lock}` : "no clues!"}` : "\u{1F50E} still sleuthing" });
-      list.append(el("li", {}, el("span", { textContent: label }), right));
+      list.append(el("li", { className: row.name === match.g ? "me" : "" }, el("span", { textContent: label }), right));
     }
   }
 
-  function selectGameTab(name) {
-    for (const tab of document.querySelectorAll("#gameSheet .tab")) tab.setAttribute("aria-selected", String(tab.dataset.tab === name));
-    for (const panel of document.querySelectorAll("#gameSheet .panel")) panel.hidden = panel.dataset.panel !== name;
-    if (name === "clues") {
-      try { localStorage.setItem(SEEN_KEY, String(newestNews())); } catch {}
-      updateGameDot();
-    }
-  }
-
-  function openGame() {
+  // ---------- Stepping in and out of the office ----------
+  function openOffice() {
     sleuth.lastFocus = document.activeElement;
-    const factsDone = QUESTIONS.every((q) => sleuth.data.my_facts[q.id]);
-    selectGameTab(!factsDone && !sleuth.data.facts_locked ? "facts" : "clues");
-    $("gameSheet").classList.add("open");
-    $("gameBackdrop").classList.add("open");
-    $("gameClose").focus();
+    $("office").classList.add("open");
+    $("office").setAttribute("aria-hidden", "false");
+    renderOffice();
+    drawLights();  // also hangs the "Outside" tag on the office's light string
+    $("officeExit").focus();
+    play("jingle", 1);
     loadGame().catch(() => {});  // refresh in the background in case a clue has just unlocked
+    const factsDone = QUESTIONS.every((q) => sleuth.data.my_facts[q.id]);
+    if (!factsDone && !sleuth.data.facts_locked && !sleuth.promptedFacts) {
+      sleuth.promptedFacts = true;  // nudge once per visit to fill in the fact file
+      setTimeout(() => openCase("facts"), 700);
+    }
   }
 
-  function closeGame() {
-    $("gameSheet").classList.remove("open");
-    $("gameBackdrop").classList.remove("open");
+  function closeOffice() {
+    closeCase();
+    $("office").classList.remove("open");
+    $("office").setAttribute("aria-hidden", "true");
     if (sleuth.lastFocus) sleuth.lastFocus.focus();
   }
 
@@ -1722,16 +2240,20 @@
     }).catch(() => {});
     $("gameBtn").addEventListener("click", () => {
       shedSnow($("gameBtn"));
-      openGame();
+      openOffice();
     });
-    $("gameClose").addEventListener("click", closeGame);
-    $("gameBackdrop").addEventListener("click", closeGame);
-    for (const tab of document.querySelectorAll("#gameSheet .tab")) tab.addEventListener("click", () => selectGameTab(tab.dataset.tab));
-    $("factsSave").addEventListener("click", saveFacts);
-    $("lockBtn").addEventListener("click", () => {
+    $("officeExit").addEventListener("click", closeOffice);
+    $("openFacts").addEventListener("click", () => openCase("facts"));
+    $("openBoard").addEventListener("click", () => openCase("board"));
+    $("openRules").addEventListener("click", () => openCase("rules"));
+    $("caseClose").addEventListener("click", closeCase);
+    $("caseModal").addEventListener("click", (e) => { if (e.target === $("caseModal")) closeCase(); });
+    $("closeCase").addEventListener("click", () => {
       clearTimeout(sleuth.saveTimer);
-      if (confirm(`Lock in your guess now for a ×${currentMultiplier()} multiplier? You can't change it afterwards.`)) saveGuess(true);
+      shedSnow($("closeCase"));
+      if (confirm(`Close the case now for a \u00d7${currentMultiplier()} multiplier? You can't move your pins afterwards.`)) saveGuess(true);
     });
+    addEventListener("resize", () => { if ($("office").classList.contains("open")) drawStrings(); });
   }
 
   // ---------- Scenery ----------
@@ -1833,7 +2355,12 @@
   }
 
   function drawLights() {
-    const svg = $("lights");
+    drawLightString($("lights"));
+    drawLightString($("officeLights"));
+    hangDecorations();
+  }
+
+  function drawLightString(svg) {
     svg.replaceChildren();
     const w = innerWidth;
     const span = lightSpan();
@@ -1857,7 +2384,6 @@
       }
     }
     svg.prepend(svgEl("path", { d, fill: "none", stroke: "#334155", "stroke-width": 2 }));
-    hangDecorations();
   }
   drawLights();
   addEventListener("resize", drawLights);
@@ -2176,16 +2702,18 @@
   };
 
   // Fairy lights play a little tune. The bulbs are redrawn on resize, so listen on the <svg>.
-  $("lights").addEventListener("click", (e) => {
+  const onBulbClick = (e) => {
     const bulb = e.target.closest(".bulb");
     if (!bulb) return;
-    const index = [...$("lights").querySelectorAll(".bulb")].indexOf(bulb);
+    const index = [...e.currentTarget.querySelectorAll(".bulb")].indexOf(bulb);
     play("note", PENTATONIC[index % PENTATONIC.length]);
     restartClass(bulb, "ping");
     bulb.addEventListener("animationend", () => bulb.classList.remove("ping"), { once: true });
     const r = bulb.getBoundingClientRect();
     sparkle(r.left + r.width / 2, r.top + r.height / 2, bulb.getAttribute("fill"), 10);
-  });
+  };
+  $("lights").addEventListener("click", onBulbClick);
+  $("officeLights").addEventListener("click", onBulbClick);
 
   // The moon calls Santa's sleigh across the sky
   const sleigh = document.querySelector(".sleigh");
