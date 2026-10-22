@@ -173,7 +173,19 @@
   .hanger:hover, .hanger:focus-visible { animation-play-state: paused; }
   .hanger:focus-visible { outline: none; }
   .hanger:focus-visible .tag-face, .hanger:focus-visible .ball { box-shadow: 0 0 0 3px var(--gold-light); }
-  .hanger .string { width: 2px; height: 30px; background: linear-gradient(#a8873a, #d4af37); }
+  .hanger .string { position: relative; width: 2px; height: 30px; background: linear-gradient(#a8873a, #d4af37); }
+  /* knot where the string ties onto the light wire */
+  .hanger .string::before {
+    content: "";
+    position: absolute;
+    top: -3px;
+    left: -2px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #d4af37;
+    box-shadow: 0 0 0 1px #1f2937;
+  }
 
   .sound { right: 22px; animation-delay: -2s; }
   .sound .cap { width: 14px; height: 7px; border-radius: 2px 2px 0 0; background: linear-gradient(90deg, #a8873a, #fde68a, #a8873a); }
@@ -1311,12 +1323,32 @@
   })();
 
   // ---------- Fairy lights along the top ----------
+  const WIRE_TOP = 4;
+  const SAG = 26;
+  const lightSpan = () => (innerWidth < 500 ? 110 : 150);
+
+  // Height of the wire at screen x. Each scallop is a quadratic curve whose control point
+  // sits 2*SAG below the ends, so the wire hangs SAG px low at the middle of each span.
+  function wireY(x) {
+    const t = (x % lightSpan()) / lightSpan();
+    return WIRE_TOP + 4 * SAG * t * (1 - t);
+  }
+
+  // Start each hanging decoration's string exactly on the wire above it
+  function hangDecorations() {
+    for (const el of document.querySelectorAll(".hanger")) {
+      if (el.hidden) continue;
+      const centre = el.offsetLeft + el.offsetWidth / 2;
+      el.style.top = `${wireY(centre) - 1}px`;
+    }
+  }
+
   function drawLights() {
     const svg = $("lights");
     svg.replaceChildren();
     const w = innerWidth;
-    const span = w < 500 ? 110 : 150;
-    const sag = 26;
+    const span = lightSpan();
+    const sag = SAG;
     let d = "M0 4";
     let i = 0;
     for (let x = 0; x < w; x += span) {
@@ -1336,9 +1368,11 @@
       }
     }
     svg.prepend(svgEl("path", { d, fill: "none", stroke: "#334155", "stroke-width": 2 }));
+    hangDecorations();
   }
   drawLights();
   addEventListener("resize", drawLights);
+  if (document.fonts) document.fonts.ready.then(hangDecorations);  // tag width changes once the font loads
 
   // ---------- Canvas helpers ----------
   function fitCanvas(canvas, scale = 1) {
