@@ -459,6 +459,18 @@
   }
   .pin-cluster { position: absolute; z-index: 2; top: -6px; left: 6px; right: 6px; display: flex; flex-wrap: wrap; justify-content: center; gap: 1px; }
   .pin-cluster i { width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff9a9a, #dc2626 45%, #7f1d1d); box-shadow: 0 2px 2px rgba(0, 0, 0, .4); }
+  .pin-cluster i.drop { animation: pin-in .35s cubic-bezier(.3, 1.6, .5, 1); }
+  .polaroid.thunk { animation: thunk .35s ease-out; }
+  @keyframes pin-in { from { opacity: 0; transform: translateY(-16px) scale(1.7); } to { opacity: 1; transform: none; } }
+  @keyframes thunk {
+    0%, 100% { transform: rotate(var(--r, 0deg)); }
+    30% { transform: rotate(calc(var(--r, 0deg) + 2.5deg)) translateY(3px); }
+    65% { transform: rotate(calc(var(--r, 0deg) - 1deg)); }
+  }
+  /* Returning visitors: already unwrapped, so skip the opening animations */
+  .gift.restored .lid, .gift.restored .box { animation: none; opacity: 0; }
+  .reveal.restored { animation: none; opacity: 1; transform: translateY(-50%); pointer-events: auto; }
+  .reveal.restored .name { clip-path: none; animation: glow 3s ease-in-out infinite; }
   .pin-cluster i.gold { background: radial-gradient(circle at 35% 30%, #fff6c2, #d4af37 45%, #7a5a20); }  /* locked in */
   .polaroid .stepper { margin-top: 6px; }
   .mini-stamp {
@@ -1893,6 +1905,14 @@
           tone(f, t + i * 0.08, 1.4, 0.12, "triangle");
           tone(f * 2, t + i * 0.08, 0.6, 0.03);
         });
+      } else if (kind === "pin") {
+        // a push pin going into cork: a dull thunk with a little click on top
+        tone(150, t, 0.12, 0.3);
+        tone(95, t, 0.16, 0.22);
+        noise(0.04, "highpass", 4000, 2500, 0.12, 2);
+      } else if (kind === "unpin") {
+        tone(420, t, 0.07, 0.12, "triangle");
+        noise(0.03, "highpass", 3000, 2000, 0.06, 2);
       } else if (kind === "pop") {
         const f = rand(700, 1400);
         noise(0.35, "lowpass", f, f, 0.18);
@@ -1969,8 +1989,19 @@
     $("snowman").classList.add("waving");
     launchFireworks();
     onUnwrapped();
+    try { localStorage.setItem(UNWRAPPED_KEY, "1"); } catch {}
     busy = false;
   });
+
+  // Returning visitors have already had the big moment, so show their match straight away
+  const UNWRAPPED_KEY = match ? `santa-unwrapped-${year}-${match.g}` : "";
+  function restoreUnwrapped() {
+    taps = 3;
+    $("hint").classList.add("hidden");
+    gift.classList.add("open", "restored");
+    reveal.classList.add("show", "write", "restored");
+    onUnwrapped();
+  }
 
   function spotlight(on) {
     const r = gift.getBoundingClientRect();
@@ -1982,8 +2013,9 @@
   }
 
   $("again").addEventListener("click", () => {
-    reveal.classList.remove("show", "write");
-    gift.classList.remove("open", "lvl1", "lvl2");
+    try { localStorage.removeItem(UNWRAPPED_KEY); } catch {}
+    reveal.classList.remove("show", "write", "restored");
+    gift.classList.remove("open", "lvl1", "lvl2", "restored");
     $("snowman").classList.remove("waving");
     $("hint").textContent = HINTS[0];
     $("hint").classList.remove("hidden");
@@ -2527,9 +2559,11 @@
       if (sleuth.crossed.has(name)) card.classList.add("crossed");
       if (count) card.classList.add("bet");
       if (d.revealed && name === d.santa) card.append(el("span", { className: "mini-stamp", textContent: "GUILTY" }));
+      const justPinned = sleuth.justPinned && sleuth.justPinned.name === name;
       card.prepend(el("div", { className: "pin-cluster" },
         ...Array.from({ length: fixed }, () => el("i", { className: "gold", title: "Locked in" })),
-        ...Array.from({ length: loose }, () => el("i"))));
+        ...Array.from({ length: loose }, (_, i) => el("i", { className: justPinned && sleuth.justPinned.delta > 0 && i === loose - 1 ? "drop" : "" }))));
+      if (justPinned) card.classList.add("thunk");
       const photo = card.querySelector(".photo");
       photo.title = "Tap to cross out";
       photo.addEventListener("click", () => toggleCrossed(name));
@@ -2765,8 +2799,10 @@
     if (next < 0 || tokensUsed() + delta > TOKENS) return;
     if (next) sleuth.draft[name] = next;
     else delete sleuth.draft[name];
-    play("note", delta > 0 ? 659.25 : 523.25);
+    play(delta > 0 ? "pin" : "unpin");
+    sleuth.justPinned = { name, delta };  // animate just this pin and polaroid on the next draw
     renderOffice();
+    sleuth.justPinned = null;
     clearTimeout(sleuth.saveTimer);
     setStatus("caseStatus", "Saving\u2026");
     sleuth.saveTimer = setTimeout(() => saveGuess(false), 600);  // batch quick taps into one save
@@ -3821,6 +3857,11 @@
       countdown.textContent = showingHint ? "✨ Psst… try tapping things!" : original;
     }, 7000), 15000);
   })();
+
+  // Returning visitor? Show their match straight away (this runs last, once everything above is set up)
+  try {
+    if (match && localStorage.getItem(UNWRAPPED_KEY)) restoreUnwrapped();
+  } catch {}
 </script>
 </body>
 </html>
