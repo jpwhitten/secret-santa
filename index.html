@@ -2798,7 +2798,7 @@
         body.append(input);
         setTimeout(() => input.focus(), 50);
       }
-      body.append(el("p", { className: "ob-hint", textContent: "Be honest \u2014 this could end up pinned to someone's corkboard!" }));
+      body.append(el("p", { className: "ob-hint", textContent: "\u{1F385} Answer honestly \u2014 fibs will land you on the naughty list!" }));
       next("Next \u2192");
     } else if (step.type === "avatar") {
       sleuth.avatarDraft = cleanAvatar((sleuth.data.avatars || {})[match.g]);
