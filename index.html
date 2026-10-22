@@ -118,40 +118,77 @@
   }
   #confetti { z-index: 5; }
 
+  /* Footer: a red ribbon banner with forked tails tucked behind it */
   .footer {
     position: fixed;
     z-index: 4;
     left: 50%;
     bottom: 2.4vh;
     transform: translateX(-50%);
-    padding: 9px 20px;
-    border-radius: 999px;
-    background: rgba(6, 15, 36, .62);
-    font: 12px Arial, Helvetica, sans-serif;
-    letter-spacing: 4px;
     white-space: nowrap;
     text-align: center;
+    filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .45));
+  }
+  .footer .band {
+    position: relative;
+    z-index: 1;
+    padding: 9px 26px 8px;
+    background: linear-gradient(to bottom, #ef4444 0%, #b91c1c 55%, #991b1b 100%);
+    border-top: 1px solid #f87171;
+    font: bold 12px Arial, Helvetica, sans-serif;
+    letter-spacing: 4px;
     color: var(--gold-light);
   }
-  @media (max-width: 500px) { .footer { padding: 8px 14px; font-size: 11px; letter-spacing: 2px; } }
-  .countdown { margin-top: 6px; font: italic 14px Georgia, serif; letter-spacing: 0; color: var(--mint); }
+  .footer::before, .footer::after {
+    content: "";
+    position: absolute;
+    top: 10px;
+    width: 46px;
+    height: 100%;
+    background: linear-gradient(to bottom, #991b1b, #7f1d1d);
+  }
+  .footer::before { left: -32px; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%, 14px 50%); }
+  .footer::after { right: -32px; clip-path: polygon(0 0, 100% 0, calc(100% - 14px) 50%, 100% 100%, 0 100%); }
+  @media (max-width: 500px) { .footer .band { padding: 8px 16px 7px; font-size: 11px; letter-spacing: 2px; } }
+  .countdown { margin-top: 4px; font: italic 14px Georgia, serif; font-weight: normal; letter-spacing: 0; color: #fff7ed; }
   .countdown:empty { display: none; }
 
-  .sound {
+  /* Hanging decorations: the Wishlists tag and the mute bauble dangle from the fairy lights */
+  .hanger {
     position: fixed;
     z-index: 6;
-    right: 14px;
-    bottom: 14px;
-    width: 40px;
-    height: 40px;
-    border: 1px solid rgba(253, 230, 138, .45);
-    border-radius: 50%;
-    background: rgba(6, 15, 36, .55);
-    color: var(--gold-light);
-    font-size: 18px;
+    top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    border: 0;
+    background: none;
     cursor: pointer;
+    transform-origin: top center;
+    animation: swing 4.5s ease-in-out infinite;
+    filter: drop-shadow(0 6px 8px rgba(0, 0, 0, .45));
+    -webkit-tap-highlight-color: transparent;
   }
-  .sound:hover { background: rgba(253, 230, 138, .12); }
+  .hanger:hover, .hanger:focus-visible { animation-play-state: paused; }
+  .hanger:focus-visible { outline: none; }
+  .hanger:focus-visible .tag-face, .hanger:focus-visible .ball { box-shadow: 0 0 0 3px var(--gold-light); }
+  .hanger .string { width: 2px; height: 30px; background: linear-gradient(#a8873a, #d4af37); }
+
+  .sound { right: 22px; animation-delay: -2s; }
+  .sound .cap { width: 14px; height: 7px; border-radius: 2px 2px 0 0; background: linear-gradient(90deg, #a8873a, #fde68a, #a8873a); }
+  .sound .ball {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 34% 30%, #fecaca 0%, #ef4444 30%, #991b1b 75%, #7f1d1d 100%);
+    font-size: 17px;
+  }
+  .sound:hover .ball { transform: scale(1.08); }
+
+  @media (max-width: 500px) { .moon { right: 26vw; } }
 
   /* ---------- Heading ---------- */
   .eyebrow { font: 12px Arial, Helvetica, sans-serif; letter-spacing: 5px; color: var(--gold-light); }
@@ -330,48 +367,94 @@
   .details { margin-top: 10px; font: 14px Arial, Helvetica, sans-serif; color: #4b5563; }
   .details:empty { display: none; }
   .details strong { color: #14532d; }
-  .again {
-    margin-top: 18px;
-    padding: 8px 16px;
-    border: 1px solid rgba(253, 230, 138, .5);
-    border-radius: 999px;
-    background: rgba(6, 15, 36, .55);
-    color: var(--gold-light);
-    font: 13px Arial, Helvetica, sans-serif;
-    letter-spacing: 1px;
-    cursor: pointer;
-  }
-  .again:hover { background: rgba(253, 230, 138, .12); }
 
   .error .stage { display: none; }
 
   /* ---------- Wishlists ---------- */
-  .wish-btn {
-    position: fixed;
-    z-index: 6;
-    top: 64px;
-    left: 14px;
-    padding: 9px 16px;
-    border: 1px solid rgba(253, 230, 138, .45);
-    border-radius: 999px;
-    background: rgba(6, 15, 36, .6);
-    color: var(--gold-light);
-    font: 13px Arial, Helvetica, sans-serif;
-    letter-spacing: 1px;
-    cursor: pointer;
-  }
-  .wish-btn:hover { background: rgba(253, 230, 138, .12); }
-  .wish-btn .dot {
+  /* Gift-tag shape, shared by the hanging Wishlists tag and the reveal button */
+  .tag-face {
+    position: relative;
     display: inline-block;
-    width: 8px;
-    height: 8px;
-    margin-left: 6px;
+    background: linear-gradient(160deg, #fffdf6 0%, #fbf1d6 100%);
+    color: var(--red);
+    font-family: var(--festive);
+    font-weight: bold;
+    white-space: nowrap;
+    transition: transform .2s;
+  }
+  .tag-face .hole {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #0b1d42;
+    box-shadow: inset 0 0 0 2px var(--gold);
+  }
+
+  .wish-btn { left: 26px; }
+  .wish-btn .tag-face {
+    padding: 22px 16px 10px;
+    font-size: 21px;
+    clip-path: polygon(22% 0, 78% 0, 100% 20%, 100% 100%, 0 100%, 0 20%);
+  }
+  .wish-btn .tag-face .hole { top: 7px; left: 50%; margin-left: -4.5px; }
+  .wish-btn:hover .tag-face { transform: scale(1.05); }
+  .wish-btn .dot {
+    position: absolute;
+    top: 36px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+    border: 2px solid #fffaf0;
     border-radius: 50%;
     background: #ef4444;
-    box-shadow: 0 0 8px #ef4444;
-    vertical-align: middle;
+    box-shadow: 0 0 10px #ef4444;
   }
-  .reveal .again + .again { margin-left: 8px; }
+
+  .reveal-actions { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px; }
+  .tag-btn {
+    position: relative;
+    padding: 0 0 0 4px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    filter: drop-shadow(0 8px 14px rgba(0, 0, 0, .5));
+    transform: rotate(-2deg);
+    transition: transform .2s;
+  }
+  .tag-btn:hover, .tag-btn:focus-visible { transform: rotate(0) scale(1.05); outline: none; }
+  .tag-btn .tag-face {
+    padding: 11px 24px 11px 40px;
+    font-size: 24px;
+    clip-path: polygon(20px 0, 100% 0, 100% 100%, 20px 100%, 0 50%);
+  }
+  .tag-btn .tag-face .hole { top: 50%; left: 16px; margin-top: -4.5px; }
+  /* a loop of gold twine through the hole */
+  .tag-btn::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    left: -14px;
+    top: 50%;
+    width: 34px;
+    height: 20px;
+    margin-top: -16px;
+    border: 2px solid var(--gold);
+    border-color: var(--gold) transparent transparent var(--gold);
+    border-radius: 50%;
+    transform: rotate(-20deg);
+  }
+  .link-btn {
+    padding: 4px 8px;
+    border: 0;
+    background: none;
+    color: var(--gold-light);
+    font: italic 15px Georgia, serif;
+    text-decoration: underline dotted rgba(253, 230, 138, .6);
+    text-underline-offset: 4px;
+    cursor: pointer;
+  }
+  .link-btn:hover { color: #fff; }
 
   .backdrop {
     position: fixed;
@@ -513,6 +596,7 @@
   @keyframes flicker { 0%, 100% { opacity: 1; } 40% { opacity: .85; } 45% { opacity: .95; } 70% { opacity: .9; } }
   @keyframes flap { from { transform: rotate(-6deg); } to { transform: rotate(10deg); } }
   @keyframes wave { from { transform: rotate(0); } to { transform: rotate(30deg); } }
+  @keyframes swing { 0%, 100% { transform: rotate(-3deg); } 50% { transform: rotate(3deg); } }
   @keyframes bob { from { transform: translateY(-1.5px); } to { transform: translateY(1.5px); } }
   @keyframes fly {
     0% { transform: translate(-25vw, 40px) rotate(-5deg); }
@@ -685,21 +769,30 @@
         <div class="name" id="name"></div>
         <div class="details" id="details"></div>
       </div>
-      <div>
-        <button class="again" id="again" type="button">&#8634; Wrap it back up</button><button class="again" id="seeWish" type="button" hidden>&#127873; See their wishlist</button>
+      <div class="reveal-actions">
+        <button class="tag-btn" id="seeWish" type="button" hidden><span class="tag-face"><span class="hole"></span><span id="seeWishLabel">See their wishlist</span></span></button>
+        <button class="link-btn" id="again" type="button">&#8634; Wrap it back up</button>
       </div>
     </div>
   </div>
 </main>
 
 <div class="footer" id="footer">
-  &#129323; SHH&hellip; KEEP IT SECRET
-  <div class="countdown" id="countdown"></div>
+  <div class="band">
+    &#129323; SHH&hellip; KEEP IT SECRET
+    <div class="countdown" id="countdown"></div>
+  </div>
 </div>
 
-<button class="sound" id="sound" type="button" aria-label="Mute sound">&#128266;</button>
+<button class="hanger sound" id="sound" type="button" aria-label="Mute sound">
+  <span class="string"></span><span class="cap"></span><span class="ball" id="soundIcon">&#128266;</span>
+</button>
 
-<button class="wish-btn" id="wishBtn" type="button" hidden>&#128221; Wishlists<span class="dot" id="wishDot" hidden></span></button>
+<button class="hanger wish-btn" id="wishBtn" type="button" hidden>
+  <span class="string"></span>
+  <span class="tag-face"><span class="hole"></span>Wishlists</span>
+  <span class="dot" id="wishDot" hidden></span>
+</button>
 <div class="backdrop" id="backdrop"></div>
 <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
   <div class="stripe"></div>
@@ -806,7 +899,7 @@
   try { muted = localStorage.getItem("santa-muted") === "1"; } catch {}
   const soundBtn = $("sound");
   const showSound = () => {
-    soundBtn.textContent = muted ? "\u{1F507}" : "\u{1F50A}";
+    $("soundIcon").textContent = muted ? "\u{1F507}" : "\u{1F50A}";
     soundBtn.setAttribute("aria-label", muted ? "Unmute sound" : "Mute sound");
   };
   showSound();
@@ -1102,7 +1195,7 @@
     if (!match || !SUPABASE_URL) return;
     wish.unwrapped = true;
     $("tabTheirs").textContent = `\u{1F381} ${match.r}'s list`;
-    $("seeWish").textContent = `\u{1F381} See ${match.r}'s wishlist`;
+    $("seeWishLabel").textContent = `See ${match.r}'s wishlist`;
     $("seeWish").hidden = false;
     renderTheirs();
     loadTheirs();
