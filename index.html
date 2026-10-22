@@ -518,6 +518,60 @@
   .case-status { min-height: 1.3em; margin: 12px 0 0; text-align: center; font-style: italic; color: #fde9c7; }
   .case-status.error { color: #fca5a5; }
 
+  /* Two boards on the wall: your own case, and the Family Map */
+  .board-tabs { position: relative; z-index: 2; display: flex; justify-content: center; gap: 6px; }
+  .board-tab {
+    padding: 10px 18px 12px;
+    border: 0;
+    border-radius: 10px 10px 0 0;
+    background: #8b5a2b;
+    color: var(--gold-light);
+    font: 700 15px Arial, Helvetica, sans-serif;
+    cursor: pointer;
+    box-shadow: inset 0 -5px 8px rgba(0, 0, 0, .25);
+  }
+  .board-tab[aria-selected="true"] { background: #6b4423; color: #fff; box-shadow: none; }
+  .map-intro {
+    position: relative;
+    z-index: 1;
+    max-width: 580px;
+    margin: 0 auto 22px;
+    padding: 12px 16px;
+    background: #fffbea;
+    color: #3b2a1a;
+    font-size: 15px;
+    text-align: center;
+    box-shadow: 0 6px 10px rgba(0, 0, 0, .35);
+    transform: rotate(.6deg);
+  }
+  .map-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fill, 150px); justify-content: center; gap: 26px 16px; }
+  @media (max-width: 420px) { .map-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .map-card .polaroid { width: 100%; }
+  .map-card.locked .polaroid > .pin { background: radial-gradient(circle at 35% 30%, #fff6c2, #d4af37 45%, #7a5a20); }
+  .map-card .ask { margin-top: 8px; font: 700 17px 'Caveat', cursive; color: var(--gold-light); text-align: center; text-shadow: 0 1px 3px rgba(0, 0, 0, .6); }
+  .map-card select {
+    width: 100%;
+    margin-top: 4px;
+    padding: 7px 8px;
+    border: 2px solid #e2cf94;
+    border-radius: 8px;
+    background: #fff;
+    color: #1f2937;
+    font: 15px Georgia, serif;
+  }
+  .map-card.locked select { border-color: var(--gold); background: #fdf6dd; }
+  .map-card .note-chip {
+    margin-top: 6px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: rgba(255, 251, 234, .92);
+    color: #3b2a1a;
+    font: bold 13px Arial, Helvetica, sans-serif;
+    text-align: center;
+  }
+  .map-card .note-chip.win { background: #dcfce7; color: #166534; }
+  .map-card .note-chip.miss { background: #fee2e2; color: #991b1b; }
+
   /* Desk along the bottom, with (for now purely decorative) props */
   .desk { margin-top: 40px; }
   .desk-props { position: relative; z-index: 1; display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-end; gap: 18px 30px; padding: 0 12px; }
@@ -1400,12 +1454,21 @@
       <button class="wall-note" id="openRules" type="button" style="--r:-1deg"><span class="pin"></span>&#128220; How to play</button>
     </div>
 
+    <div class="board-tabs" role="tablist">
+      <button class="board-tab" id="tabCase" type="button" role="tab" aria-selected="true">&#128269; My case</button>
+      <button class="board-tab" id="tabMap" type="button" role="tab" aria-selected="false">&#128506;&#65039; Family map</button>
+    </div>
     <div class="corkboard" id="corkboard">
       <svg class="strings" id="strings" aria-hidden="true"></svg>
       <div class="evidence" id="evidence"></div>
       <div class="suspects-title">SUSPECTS</div>
       <div class="suspect-grid" id="suspectGrid"></div>
       <div class="stamp" id="stamp" hidden></div>
+    </div>
+    <div class="corkboard" id="mapBoard" hidden>
+      <div class="suspects-title">THE FAMILY MAP</div>
+      <p class="map-intro" id="mapIntro"></p>
+      <div class="map-grid" id="mapGrid"></div>
     </div>
 
     <button class="close-case" id="closeCase" type="button">
@@ -1446,6 +1509,8 @@
     <li><strong>Hedge your bets:</strong> lock a hunch early for big points, and keep some pins back for when the clues firm up.</li>
     <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every pin your giftee puts in you. (If they don't place all 10 pins, you get 5. No complete fact file, no stealth points.)</li>
     <li><strong>Fact files must be true.</strong> Out loud, though, everyone denies everything &mdash; lying is part of the game!</li>
+    <li><strong>The Family Map:</strong> guess who is buying for <em>everyone else</em> too. Each case has a 20-point pot, split between everyone who gets it right &mdash; so a case only you crack pays the full 20. Earlier lock-ins take a bigger share, just like pins.</li>
+    <li><strong>Map stealth:</strong> as a Santa you also start with 20 points and lose 4 for every person who correctly maps who you're buying for.</li>
     <li>Your Santa and the scores are revealed on Christmas Day. &#127876;</li>
   </ol>
 </template>
@@ -1902,7 +1967,7 @@
   const QUESTION_TEXT = Object.fromEntries(QUESTIONS.map((q) => [q.id, q.text]));
   const MULTIPLIERS = [3, 2.5, 2, 1.5, 1.2, 1];  // by clues released when you lock in
   const TOKENS = 10;
-  const sleuth = { data: null, draft: {}, crossed: new Set(), saveTimer: null, lastFocus: null };
+  const sleuth = { data: null, draft: {}, mapDraft: {}, view: "case", crossed: new Set(), saveTimer: null, mapTimer: null, lastFocus: null };
   const CROSSED_KEY = match ? `santa-crossed-${year}-${match.g}` : "";
   const SEEN_KEY = match ? `santa-seen-clues-${year}-${match.g}` : "";
   try { sleuth.crossed = new Set(JSON.parse(localStorage.getItem(CROSSED_KEY) || "[]")); } catch {}
@@ -1925,6 +1990,9 @@
   function friendlyError(err) {
     const message = String(err.message);
     if (/place some pins/.test(message)) return "Place some pins first, then lock them in.";
+    if (/make some guesses/.test(message)) return "Make some guesses first, then lock them in.";
+    if (/own giftee/.test(message)) return "That's your own giftee \u2014 you already know that one!";
+    if (/guess is locked/.test(message)) return "That guess is locked in.";
     if (/game is over/.test(message)) return "The game is over — check the Board!";
     if (/fact files are locked/.test(message)) return "Fact files are locked now.";
     if (/only have 10/.test(message)) return "You only have 10 pins.";
@@ -1937,6 +2005,9 @@
   async function loadGame() {
     sleuth.data = await rpc("santa_get_game", { p_year: year, p_name: match.g, p_token: match.k });
     sleuth.draft = { ...sleuth.data.guess.tokens };
+    // Family Map guesses that aren't locked yet can still be changed
+    sleuth.data.map = sleuth.data.map || {};
+    sleuth.mapDraft = Object.fromEntries(Object.entries(sleuth.data.map || {}).filter(([, g]) => g.c === null).map(([who, g]) => [who, g.s]));
     if ($("office").classList.contains("open")) renderOffice();
     if (caseKind === "board") renderCaseBoard();
     updateGameDot();
@@ -2101,6 +2172,10 @@
     chips.replaceChildren();
     const pips = el("span", { className: "pips" }, ...[1, 2, 3, 4, 5].map((n) => el("i", { className: n <= d.released ? "on" : "" })));
     chips.append(el("span", { className: "chip" }, `Clue ${Math.min(d.released, 5)} of 5`, pips));
+    if (sleuth.view === "map") {
+      renderMap(chips);
+      return;
+    }
     if (d.revealed) {
       const mine = d.board.find((row) => row.name === match.g);
       if (mine) chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} You scored ${mine.total} points` }));
@@ -2196,6 +2271,108 @@
     setTimeout(drawStrings, 1000);  // again once any newly dropped notes have landed
     try { localStorage.setItem(SEEN_KEY, String(newestNews())); } catch {}
     updateGameDot();
+  }
+
+  // ---------- The Family Map: guess everyone else's Santa ----------
+  const MAP_POT = 20;
+  const mapCases = () => sleuth.data.players.filter((p) => p !== match.g);
+  const mapLocked = (who) => sleuth.data.map[who] && sleuth.data.map[who].c !== null;
+  const mapWeight = (guess) => (guess.c === null ? 0.5 : MULTIPLIERS[Math.min(guess.c, 5)]);
+
+  function renderMap(chips) {
+    const d = sleuth.data;
+    const cases = mapCases().filter((who) => who !== match.r);  // you already know your own giftee's case
+    const lockedCount = cases.filter(mapLocked).length;
+    const guessed = cases.filter((who) => mapLocked(who) || sleuth.mapDraft[who]).length;
+    const movable = Object.keys(sleuth.mapDraft).length;
+
+    if (d.revealed) {
+      const mine = d.board.find((row) => row.name === match.g);
+      if (mine) chips.append(el("span", { className: "chip", textContent: `\u{1F5FA}\u{FE0F} Map points: ${mine.map}` }));
+    } else {
+      chips.append(el("span", { className: "chip", textContent: `\u{1F5FA}\u{FE0F} ${guessed} of ${cases.length} cases guessed \u00b7 \u{1F512} ${lockedCount} locked` }));
+      chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} Lock now: \u00d7${currentMultiplier()}` }));
+    }
+    $("mapIntro").textContent = d.revealed
+      ? "Case closed! Here's who was buying for whom \u2014 and who cracked each case."
+      : `Who's buying for whom? Every case has a ${MAP_POT}-point pot, split between everyone who gets it right \u2014 crack one nobody else does and it's all yours. Earlier lock-ins take a bigger share.`;
+
+    const grid = $("mapGrid");
+    grid.replaceChildren();
+    for (const who of mapCases()) {
+      const card = el("div", { className: "map-card" });
+      const guess = d.map[who];
+      if (mapLocked(who)) card.classList.add("locked");
+      card.append(polaroid(who, { caption: who }));
+
+      if (who === match.r) {
+        card.append(el("div", { className: "note-chip", textContent: "\u{1F381} Your giftee \u2014 you know this one!" }));
+      } else if (d.revealed) {
+        const santa = d.pairs[who];
+        card.append(el("div", { className: "ask", textContent: `Santa: ${santa}` }));
+        const result = (d.map_cases || {})[who];
+        const crackers = result ? result.correct : 0;
+        if (guess && guess.s === santa) {
+          const share = (MAP_POT * mapWeight(guess)) / result.weight;
+          card.append(el("div", { className: "note-chip win", textContent: `\u2713 +${share.toFixed(1)} pts (${crackers} got it)` }));
+        } else {
+          card.append(el("div", { className: "note-chip miss", textContent: guess ? `\u2717 You said ${guess.s}` : `${crackers} got it` }));
+        }
+      } else {
+        card.append(el("div", { className: "ask", textContent: `${who}'s Santa is\u2026` }));
+        const options = mapCases().filter((s) => s !== who);
+        const select = el("select", { disabled: mapLocked(who) },
+          el("option", { value: "", textContent: "\u2753 No guess yet" }),
+          ...options.map((s) => el("option", { value: s, textContent: s })));
+        select.setAttribute("aria-label", `Who is ${who}'s Santa?`);
+        select.value = mapLocked(who) ? guess.s : (sleuth.mapDraft[who] || "");
+        select.addEventListener("change", () => {
+          if (select.value) sleuth.mapDraft[who] = select.value;
+          else delete sleuth.mapDraft[who];
+          play("note", 659.25);
+          clearTimeout(sleuth.mapTimer);
+          setStatus("caseStatus", "Saving\u2026");
+          sleuth.mapTimer = setTimeout(() => saveMap(false), 600);
+          renderOffice();
+        });
+        card.append(select);
+        if (mapLocked(who)) card.append(el("div", { className: "note-chip", textContent: `\u{1F512} Locked \u00b7 \u00d7${mapWeight(guess)}` }));
+      }
+      grid.append(card);
+    }
+
+    $("closeCase").hidden = d.revealed;
+    $("closeCase").disabled = !movable;
+    $("closeCaseLabel").textContent = movable
+      ? `Lock in ${movable} guess${movable === 1 ? "" : "es"} \u{1F512} \u00d7${currentMultiplier()}`
+      : "Make some guesses, then lock them in";
+    $("openFactsLabel").textContent = d.revealed ? `\u{1F4C1} ${d.santa}'s file` : "\u{1F4C1} My fact file";
+  }
+
+  async function saveMap(lock) {
+    try {
+      sleuth.data.map = await rpc("santa_set_map", { p_year: year, p_name: match.g, p_token: match.k, p_guesses: sleuth.mapDraft, p_lock: lock });
+      if (lock) {
+        sleuth.mapDraft = {};
+        play("thud");
+        setStatus("caseStatus", `\u{1F512} Locked in at \u00d7${currentMultiplier()}.`);
+      } else {
+        setStatus("caseStatus", "Saved \u2713");
+      }
+      renderOffice();
+    } catch (err) {
+      setStatus("caseStatus", friendlyError(err), true);
+    }
+  }
+
+  function setView(view) {
+    sleuth.view = view;
+    $("tabCase").setAttribute("aria-selected", String(view === "case"));
+    $("tabMap").setAttribute("aria-selected", String(view === "map"));
+    $("corkboard").hidden = view !== "case";
+    $("mapBoard").hidden = view !== "map";
+    setStatus("caseStatus", "");
+    renderOffice();
   }
 
   // Red string from each unlocked clue's pin to the prime suspect's pin. It's drawn over the board,
@@ -2408,8 +2585,8 @@
     const d = sleuth.data;
     if (!$("boardList")) return;
     $("boardNote").textContent = d.revealed
-      ? "Final scores: \u{1F50D} detective + \u{1F3AD} stealth."
-      : "Scores appear on Christmas Day. For now, here's how many pins each detective has locked in.";
+      ? "Final scores: \u{1F50D} your case \u00b7 \u{1F5FA}\u{FE0F} family map \u00b7 \u{1F3AD} stealth."
+      : "Scores appear on Christmas Day. For now, here's how much each detective has locked in.";
     const list = $("boardList");
     list.replaceChildren();
     const medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
@@ -2418,8 +2595,8 @@
       const medal = d.revealed && !row.host ? (medals[rank++] || "") : "";
       const label = `${medal ? `${medal} ` : ""}${row.name}${row.host ? " \u{1F385} (host)" : ""}`;
       const right = d.revealed
-        ? el("span", { className: "st" }, `\u{1F50D} ${row.detective} + \u{1F3AD} ${row.stealth} = `, el("span", { className: "pts", textContent: `${row.total}` }))
-        : el("span", { className: "st", textContent: row.locked_pins ? `\u{1F512} ${row.locked_pins}/10 pins locked` : "\u{1F50E} still sleuthing" });
+        ? el("span", { className: "st" }, `\u{1F50D} ${row.detective} \u00b7 \u{1F5FA}\u{FE0F} ${row.map} \u00b7 \u{1F3AD} ${row.stealth + row.map_stealth} = `, el("span", { className: "pts", textContent: `${row.total}` }))
+        : el("span", { className: "st", textContent: row.locked_pins || row.map_locked ? `\u{1F512} ${row.locked_pins}/10 pins \u00b7 \u{1F5FA}\u{FE0F} ${row.map_locked} locked` : "\u{1F50E} still sleuthing" });
       const face = el("span", { className: "mini-av", textContent: initials(row.name) });
       if (d.avatars && d.avatars[row.name]) face.innerHTML = avatarSVG(d.avatars[row.name]);
       list.append(el("li", { className: row.name === match.g ? "me" : "" }, el("span", {}, face, label), right));
@@ -2472,9 +2649,17 @@
     $("openAvatar").addEventListener("click", () => openCase("avatar"));
     $("caseClose").addEventListener("click", closeCase);
     $("caseModal").addEventListener("click", (e) => { if (e.target === $("caseModal")) closeCase(); });
+    $("tabCase").addEventListener("click", () => setView("case"));
+    $("tabMap").addEventListener("click", () => setView("map"));
     $("closeCase").addEventListener("click", () => {
       clearTimeout(sleuth.saveTimer);
       shedSnow($("closeCase"));
+      if (sleuth.view === "map") {
+        clearTimeout(sleuth.mapTimer);
+        const n = Object.keys(sleuth.mapDraft).length;
+        if (confirm(`Lock in ${n} map guess${n === 1 ? "" : "es"} at \u00d7${currentMultiplier()}? Locked guesses can't be changed.`)) saveMap(true);
+        return;
+      }
       const n = movableTotal();
       if (confirm(`Lock in ${n} pin${n === 1 ? "" : "s"} at \u00d7${currentMultiplier()}? Locked pins can't be moved.`)) saveGuess(true);
     });
