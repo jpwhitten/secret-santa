@@ -422,6 +422,7 @@
   }
   .pin-cluster { position: absolute; z-index: 2; top: -6px; left: 6px; right: 6px; display: flex; flex-wrap: wrap; justify-content: center; gap: 1px; }
   .pin-cluster i { width: 11px; height: 11px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff9a9a, #dc2626 45%, #7f1d1d); box-shadow: 0 2px 2px rgba(0, 0, 0, .4); }
+  .pin-cluster i.gold { background: radial-gradient(circle at 35% 30%, #fff6c2, #d4af37 45%, #7a5a20); }  /* locked in */
   .polaroid .stepper { margin-top: 6px; }
   .mini-stamp {
     position: absolute;
@@ -1380,7 +1381,7 @@
     </div>
 
     <button class="close-case" id="closeCase" type="button">
-      <span class="snowcap" data-max="10" style="left:10px;right:10px"></span><span id="closeCaseLabel">Close the case</span>
+      <span class="snowcap" data-max="10" style="left:10px;right:10px"></span><span id="closeCaseLabel">Lock in</span>
     </button>
     <p class="case-status" id="caseStatus"></p>
 
@@ -1412,8 +1413,9 @@
 <template id="rulesTpl">
   <ol class="rules-list">
     <li><strong>Find your Santa.</strong> Five of your Santa's fact-file answers get pinned to your board as clues on <span class="rule-dates"></span>.</li>
-    <li><strong>You have 10 pins.</strong> Stick them in suspects &mdash; all on one, or spread them. Your Prime Suspect is whoever has the most. All 10 must be placed before you can close the case.</li>
-    <li><strong>Close the case early for more points:</strong> &times;3 before clue 1, then &times;2.5, &times;2, &times;1.5, &times;1.2 and &times;1 after clue 5. Never closing it counts &times;0.5.</li>
+    <li><strong>You have 10 pins.</strong> Stick them in suspects &mdash; all on one, or spread them. Your Prime Suspect is whoever has the most.</li>
+    <li><strong>Lock pins in whenever you like.</strong> Each batch keeps the multiplier from the moment you lock it: &times;3 before clue 1, then &times;2.5, &times;2, &times;1.5, &times;1.2 and &times;1 after clue 5. Locked pins turn gold and can't move. Pins never locked count &times;0.5.</li>
+    <li><strong>Hedge your bets:</strong> lock a hunch early for big points, and keep some pins back for when the clues firm up.</li>
     <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every pin your giftee puts in you. (If they don't place all 10 pins, you get 5. No complete fact file, no stealth points.)</li>
     <li><strong>Fact files must be true.</strong> Out loud, though, everyone denies everything &mdash; lying is part of the game!</li>
     <li>Your Santa and the scores are revealed on Christmas Day. &#127876;</li>
@@ -1885,16 +1887,19 @@
     node.append(...children);
     return node;
   };
-  const tokensUsed = () => Object.values(sleuth.draft).reduce((sum, n) => sum + n, 0);
+  // Pins come in two kinds: movable ones (sleuth.draft) and locked batches (guess.locks: {s, n, c})
+  const lockedOn = (name) => sleuth.data.guess.locks.filter((l) => l.s === name).reduce((sum, l) => sum + l.n, 0);
+  const lockedTotal = () => sleuth.data.guess.locks.reduce((sum, l) => sum + l.n, 0);
+  const movableTotal = () => Object.values(sleuth.draft).reduce((sum, n) => sum + n, 0);
+  const tokensUsed = () => movableTotal() + lockedTotal();
   const currentMultiplier = () => MULTIPLIERS[Math.min(sleuth.data.released, 5)];
 
   function friendlyError(err) {
     const message = String(err.message);
-    if (/already locked/.test(message)) return "You've already locked in.";
+    if (/place some pins/.test(message)) return "Place some pins first, then lock them in.";
     if (/game is over/.test(message)) return "The game is over — check the Board!";
     if (/fact files are locked/.test(message)) return "Fact files are locked now.";
     if (/only have 10/.test(message)) return "You only have 10 pins.";
-    if (/all 10 pins/.test(message)) return "Place all 10 pins before closing the case.";
     if (/not allowed/.test(message)) return "This link can't play — use the link from your latest Secret Santa email.";
     return "Couldn't save — check your connection and try again.";
   }
@@ -1942,18 +1947,23 @@
 
   function primeSuspect() {
     let best = null;
-    for (const [name, n] of Object.entries(sleuth.draft)) if (!best || n > sleuth.draft[best]) best = name;
+    let bestPins = 0;
+    for (const name of sleuth.data.players) {
+      const pins = lockedOn(name) + (sleuth.draft[name] || 0);
+      if (pins > bestPins) [best, bestPins] = [name, pins];
+    }
     return best;
   }
 
   function renderOffice() {
     const d = sleuth.data;
-    const locked = d.guess.locked;
+    const closed = lockedTotal() === TOKENS;  // every pin locked: nothing left to decide
     const left = TOKENS - tokensUsed();
+    const movable = movableTotal();
 
     $("caseSub").textContent = d.revealed
       ? `Case solved, ${match.g}! Here's who's been buying for you.`
-      : `${match.g}, study the evidence and find your Santa. The earlier you close the case, the more points you earn!`;
+      : `${match.g}, study the evidence and find your Santa. The earlier you lock your pins in, the more points they earn!`;
 
     const chips = $("caseChips");
     chips.replaceChildren();
@@ -1962,12 +1972,11 @@
     if (d.revealed) {
       const mine = d.board.find((row) => row.name === match.g);
       if (mine) chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} You scored ${mine.total} points` }));
-    } else if (locked) {
-      const c = d.guess.clues_at_lock;
-      chips.append(el("span", { className: "chip", textContent: `\u{1F512} Closed ${c ? `after clue ${c}` : "before any clues"} \u00b7 \u00d7${MULTIPLIERS[Math.min(c, 5)]}` }));
+    } else if (closed) {
+      chips.append(el("span", { className: "chip", textContent: "\u{1F512} All 10 pins locked in" }));
     } else {
-      chips.append(el("span", { className: "chip", textContent: `\u{1F4CC} ${left} of ${TOKENS} pins left` }));
-      chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} Close now: \u00d7${currentMultiplier()}` }));
+      chips.append(el("span", { className: "chip", textContent: `\u{1F4CC} ${left} to place \u00b7 \u{1F512} ${lockedTotal()} locked` }));
+      chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} Lock now: \u00d7${currentMultiplier()}` }));
     }
 
     // Evidence: the prime suspect in the middle, clue notes pinned around it
@@ -2017,17 +2026,21 @@
     const grid = $("suspectGrid");
     grid.replaceChildren();
     for (const name of d.players.filter((p) => p !== match.g)) {
-      const count = sleuth.draft[name] || 0;
+      const fixed = lockedOn(name);
+      const loose = sleuth.draft[name] || 0;
+      const count = fixed + loose;
       const card = polaroid(name);
       if (sleuth.crossed.has(name)) card.classList.add("crossed");
       if (count) card.classList.add("bet");
       if (d.revealed && name === d.santa) card.append(el("span", { className: "mini-stamp", textContent: "GUILTY" }));
-      card.prepend(el("div", { className: "pin-cluster" }, ...Array.from({ length: count }, () => el("i"))));
+      card.prepend(el("div", { className: "pin-cluster" },
+        ...Array.from({ length: fixed }, () => el("i", { className: "gold", title: "Locked in" })),
+        ...Array.from({ length: loose }, () => el("i"))));
       const photo = card.querySelector(".photo");
       photo.title = "Tap to cross out";
       photo.addEventListener("click", () => toggleCrossed(name));
-      if (!locked && !d.revealed) {
-        const minus = el("button", { type: "button", textContent: "\u2212", disabled: !count });
+      if (!closed && !d.revealed) {
+        const minus = el("button", { type: "button", textContent: "\u2212", disabled: !loose });  // locked pins can't come out
         const plus = el("button", { type: "button", textContent: "+", disabled: left <= 0 });
         minus.setAttribute("aria-label", `Take a pin out of ${name}`);
         plus.setAttribute("aria-label", `Stick a pin in ${name}`);
@@ -2038,12 +2051,12 @@
       grid.append(card);
     }
 
-    $("closeCase").hidden = locked || d.revealed;
-    $("closeCase").disabled = left > 0;  // every pin has to be placed before you can close the case
-    $("closeCaseLabel").textContent = left > 0
-      ? `Place ${left} more pin${left === 1 ? "" : "s"} to close the case`
-      : `Close the case \u{1F512} \u00d7${currentMultiplier()}`;
-    $("stamp").hidden = !(locked || d.revealed);
+    $("closeCase").hidden = closed || d.revealed;
+    $("closeCase").disabled = !movable;
+    $("closeCaseLabel").textContent = movable
+      ? `Lock in ${movable} pin${movable === 1 ? "" : "s"} \u{1F512} \u00d7${currentMultiplier()}`
+      : "Place some pins, then lock them in";
+    $("stamp").hidden = !(closed || d.revealed);
     $("stamp").textContent = d.revealed ? "CASE SOLVED" : "CASE CLOSED";
     $("openFactsLabel").textContent = d.revealed ? `\u{1F4C1} ${d.santa}'s file` : "\u{1F4C1} My fact file";
 
@@ -2109,13 +2122,20 @@
   async function saveGuess(lock) {
     try {
       sleuth.data.guess = await rpc("santa_set_guess", { p_year: year, p_name: match.g, p_token: match.k, p_tokens: sleuth.draft, p_lock: lock });
-      setStatus("caseStatus", lock ? "\u{1F512} Case closed. Good luck, detective!" : "Saved \u2713");
       if (lock) {
+        sleuth.draft = {};
         await loadGame();
         renderOffice();
-        restartClass($("stamp"), "slam");
         play("thud");
-        setTimeout(() => play("chime"), 250);
+        if (lockedTotal() === TOKENS) {
+          setStatus("caseStatus", "\u{1F512} All pins locked \u2014 case closed. Good luck, detective!");
+          restartClass($("stamp"), "slam");
+          setTimeout(() => play("chime"), 250);
+        } else {
+          setStatus("caseStatus", `\u{1F512} Locked in at \u00d7${currentMultiplier()}. ${TOKENS - lockedTotal()} pins still to lock.`);
+        }
+      } else {
+        setStatus("caseStatus", "Saved \u2713");
       }
     } catch (err) {
       setStatus("caseStatus", friendlyError(err), true);
@@ -2196,7 +2216,7 @@
     if (!$("boardList")) return;
     $("boardNote").textContent = d.revealed
       ? "Final scores: \u{1F50D} detective + \u{1F3AD} stealth."
-      : "Scores appear on Christmas Day. For now, here's who has closed their case.";
+      : "Scores appear on Christmas Day. For now, here's how many pins each detective has locked in.";
     const list = $("boardList");
     list.replaceChildren();
     const medals = ["\u{1F947}", "\u{1F948}", "\u{1F949}"];
@@ -2206,7 +2226,7 @@
       const label = `${medal ? `${medal} ` : ""}${row.name}${row.host ? " \u{1F385} (host)" : ""}`;
       const right = d.revealed
         ? el("span", { className: "st" }, `\u{1F50D} ${row.detective} + \u{1F3AD} ${row.stealth} = `, el("span", { className: "pts", textContent: `${row.total}` }))
-        : el("span", { className: "st", textContent: row.locked ? `\u{1F512} after ${row.clues_at_lock ? `clue ${row.clues_at_lock}` : "no clues!"}` : "\u{1F50E} still sleuthing" });
+        : el("span", { className: "st", textContent: row.locked_pins ? `\u{1F512} ${row.locked_pins}/10 pins locked` : "\u{1F50E} still sleuthing" });
       list.append(el("li", { className: row.name === match.g ? "me" : "" }, el("span", { textContent: label }), right));
     }
   }
@@ -2254,7 +2274,8 @@
     $("closeCase").addEventListener("click", () => {
       clearTimeout(sleuth.saveTimer);
       shedSnow($("closeCase"));
-      if (confirm(`Close the case now for a \u00d7${currentMultiplier()} multiplier? You can't move your pins afterwards.`)) saveGuess(true);
+      const n = movableTotal();
+      if (confirm(`Lock in ${n} pin${n === 1 ? "" : "s"} at \u00d7${currentMultiplier()}? Locked pins can't be moved.`)) saveGuess(true);
     });
     addEventListener("resize", () => { if ($("office").classList.contains("open")) drawStrings(); });
   }
