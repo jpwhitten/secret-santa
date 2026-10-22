@@ -1412,9 +1412,9 @@
 <template id="rulesTpl">
   <ol class="rules-list">
     <li><strong>Find your Santa.</strong> Five of your Santa's fact-file answers get pinned to your board as clues on <span class="rule-dates"></span>.</li>
-    <li><strong>You have 10 pins.</strong> Stick them in suspects &mdash; all on one, or spread them. Your Prime Suspect is whoever has the most.</li>
+    <li><strong>You have 10 pins.</strong> Stick them in suspects &mdash; all on one, or spread them. Your Prime Suspect is whoever has the most. All 10 must be placed before you can close the case.</li>
     <li><strong>Close the case early for more points:</strong> &times;3 before clue 1, then &times;2.5, &times;2, &times;1.5, &times;1.2 and &times;1 after clue 5. Never closing it counts &times;0.5.</li>
-    <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every pin your giftee puts in you. (If they don't play, you get 5. No complete fact file, no stealth points.)</li>
+    <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every pin your giftee puts in you. (If they don't place all 10 pins, you get 5. No complete fact file, no stealth points.)</li>
     <li><strong>Fact files must be true.</strong> Out loud, though, everyone denies everything &mdash; lying is part of the game!</li>
     <li>Your Santa and the scores are revealed on Christmas Day. &#127876;</li>
   </ol>
@@ -1893,7 +1893,8 @@
     if (/already locked/.test(message)) return "You've already locked in.";
     if (/game is over/.test(message)) return "The game is over — check the Board!";
     if (/fact files are locked/.test(message)) return "Fact files are locked now.";
-    if (/only have 10/.test(message)) return "You only have 10 tokens.";
+    if (/only have 10/.test(message)) return "You only have 10 pins.";
+    if (/all 10 pins/.test(message)) return "Place all 10 pins before closing the case.";
     if (/not allowed/.test(message)) return "This link can't play — use the link from your latest Secret Santa email.";
     return "Couldn't save — check your connection and try again.";
   }
@@ -2038,8 +2039,10 @@
     }
 
     $("closeCase").hidden = locked || d.revealed;
-    $("closeCase").disabled = !tokensUsed();
-    $("closeCaseLabel").textContent = `Close the case \u{1F512} \u00d7${currentMultiplier()}`;
+    $("closeCase").disabled = left > 0;  // every pin has to be placed before you can close the case
+    $("closeCaseLabel").textContent = left > 0
+      ? `Place ${left} more pin${left === 1 ? "" : "s"} to close the case`
+      : `Close the case \u{1F512} \u00d7${currentMultiplier()}`;
     $("stamp").hidden = !(locked || d.revealed);
     $("stamp").textContent = d.revealed ? "CASE SOLVED" : "CASE CLOSED";
     $("openFactsLabel").textContent = d.revealed ? `\u{1F4C1} ${d.santa}'s file` : "\u{1F4C1} My fact file";
