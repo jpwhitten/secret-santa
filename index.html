@@ -819,6 +819,7 @@
   .ob-hint { margin: 14px 0 0; font-size: 13px; font-style: italic; color: #8a6d4a; }
   .ob-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .ob-choice { padding: 14px 10px; border: 2px solid #e2cf94; border-radius: 12px; background: #fff; color: #1f2937; font: 16px Georgia, serif; cursor: pointer; }
+  .ob-hint-date { display: block; margin-top: 3px; font: 12px Arial, Helvetica, sans-serif; color: #8a6d4a; }
   .ob-course { margin: 12px 0 6px; font: 700 22px 'Caveat', cursive; color: var(--red); }
   .ob-menu .ob-choice { padding: 10px 6px; font-size: 14px; }
   .ob-choice[aria-pressed="true"] { border-color: var(--red); background: #fef2f2; box-shadow: 0 0 0 3px rgba(185, 28, 28, .15); }
@@ -2267,7 +2268,14 @@
     { id: "q5", tier: 5, icon: "\u{1F4F1}", text: "iPhone or Android?", options: ["iPhone", "Android", "Something else"] },
     { id: "q6", tier: 6, icon: "\u{1F37A}", text: "Your usual drink at the pub or a party?", placeholder: "e.g. Pint of Guinness" },
     { id: "q7", tier: 7, icon: "\u2708\u{FE0F}", text: "Where was your last holiday?", placeholder: "e.g. Tenerife" },
-    { id: "q8", tier: 8, icon: "\u2648", text: "Your star sign?", options: ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"] },
+    { id: "q8", tier: 8, icon: "\u2648", text: "Your star sign?", options: ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"],
+      // shown next to each option to help people pick; the saved answer is just the sign
+      hints: {
+        Aries: "\u2648 21 Mar \u2013 19 Apr", Taurus: "\u2649 20 Apr \u2013 20 May", Gemini: "\u264a 21 May \u2013 20 Jun",
+        Cancer: "\u264b 21 Jun \u2013 22 Jul", Leo: "\u264c 23 Jul \u2013 22 Aug", Virgo: "\u264d 23 Aug \u2013 22 Sep",
+        Libra: "\u264e 23 Sep \u2013 22 Oct", Scorpio: "\u264f 23 Oct \u2013 21 Nov", Sagittarius: "\u2650 22 Nov \u2013 21 Dec",
+        Capricorn: "\u2651 22 Dec \u2013 19 Jan", Aquarius: "\u2652 20 Jan \u2013 18 Feb", Pisces: "\u2653 19 Feb \u2013 20 Mar",
+      } },
   ];
   const QUESTION_TEXT = Object.fromEntries(QUESTIONS.map((q) => [q.id, q.text]));
   const MENU_JOIN = " \u00b7 ";
@@ -2864,7 +2872,7 @@
         const input = q.options
           ? el("select", { name: q.id, disabled: d.facts_locked },
               el("option", { value: "", textContent: "Choose\u2026" }),
-              ...q.options.map((o) => el("option", { value: o, textContent: o, selected: o === value })))
+              ...q.options.map((o) => el("option", { value: o, textContent: q.hints ? `${o} (${q.hints[o]})` : o, selected: o === value })))
           : el("input", { name: q.id, value, maxLength: 80, placeholder: q.placeholder || "", disabled: d.facts_locked, autocomplete: "off" });
         form.append(el("label", {}, `${q.icon} ${q.text}`, input));
       }
@@ -3065,6 +3073,7 @@
         const grid = el("div", { className: "ob-choices" });
         for (const option of q.options) {
           const button = el("button", { className: "ob-choice", type: "button", textContent: option });
+          if (q.hints) button.append(el("small", { className: "ob-hint-date", textContent: q.hints[option] }));
           button.setAttribute("aria-pressed", String(ob.answers[q.id] === option));
           button.addEventListener("click", () => {
             ob.answers[q.id] = option;
