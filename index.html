@@ -555,7 +555,101 @@
   .status { min-height: 1.3em; margin: 10px 0 0; font: 13px Arial, Helvetica, sans-serif; color: #6b7280; }
   .status.error { color: #b91c1c; }
 
+  /* ---------- Snow that builds up on things ---------- */
+  .tag-wrap { position: relative; display: inline-block; }
+  .sound .ball, .card { position: relative; }
+  .snowcap {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 100%;
+    height: calc(var(--snow, 0) * 1px);
+    border-radius: 50% 50% 2px 2px / 100% 100% 2px 2px;
+    background: #fff;
+    box-shadow: inset 0 -2px 2px rgba(140, 170, 205, .45);
+    pointer-events: none;
+    transition: height .5s linear;
+  }
+  /* two lumps so it looks like drifted snow rather than a white bar */
+  .snowcap::before, .snowcap::after {
+    content: "";
+    position: absolute;
+    bottom: 45%;
+    width: calc(var(--snow, 0) * 2.4px);
+    height: calc(var(--snow, 0) * .9px);
+    border-radius: 50% 50% 0 0;
+    background: #fff;
+  }
+  .snowcap::before { left: 14%; }
+  .snowcap::after { right: 20%; }
+
+  /* ---------- Clickable scenery ---------- */
+  main { pointer-events: none; }          /* let taps reach the scenery behind the text */
+  main .gift, main button { pointer-events: auto; }
+  .reveal:not(.show), .reveal:not(.show) * { pointer-events: none !important; }
+  .moon { cursor: pointer; transition: box-shadow .4s; }
+  .moon.glow { box-shadow: 0 0 70px 26px rgba(255, 246, 200, .5), 0 0 200px 70px rgba(255, 246, 200, .2); }
+  .scene .tree, .scene .prop { pointer-events: auto; cursor: pointer; transform-origin: 50% 100%; }
+  .tree.rustle { animation: rustle .6s ease-in-out; }
+  .snowman.hop { animation: hop .5s ease-out; }
+  .hero-tree.party .bulb { animation-duration: .3s; }
+  .hero-tree.party .star-top { animation: star-spin 1.2s ease-in-out; }
+  .cabin .waver { opacity: 0; transition: opacity .4s; }
+  .cabin.visit .waver { opacity: 1; }
+  .cabin.visit .wave-arm { animation: wave-arm .3s ease-in-out 8 alternate; transform-origin: 0% 100%; transform-box: fill-box; }
+  .lights .bulb { pointer-events: auto; cursor: pointer; }
+  .lights .bulb.ping { animation: ping .5s ease-out; transform-box: fill-box; transform-origin: center; }
+  .snowball {
+    position: fixed;
+    z-index: 5;
+    width: 14px;
+    height: 14px;
+    margin: -7px 0 0 -7px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #fff, #dbe7f3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .3);
+    pointer-events: none;
+  }
+  .splat {
+    position: fixed;
+    z-index: 5;
+    width: 130px;
+    height: 130px;
+    margin: -65px 0 0 -65px;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 50% 50%, #fff 0 34%, transparent 35%),
+      radial-gradient(circle at 18% 34%, #fff 0 13%, transparent 14%),
+      radial-gradient(circle at 82% 28%, #fff 0 11%, transparent 12%),
+      radial-gradient(circle at 76% 80%, #fff 0 12%, transparent 13%),
+      radial-gradient(circle at 24% 78%, #fff 0 9%, transparent 10%),
+      radial-gradient(circle at 52% 6%, #fff 0 7%, transparent 8%),
+      radial-gradient(circle at 96% 55%, #fff 0 5%, transparent 6%);
+    filter: drop-shadow(0 3px 4px rgba(0, 0, 0, .3));
+    animation: splat 3.2s ease-in forwards;
+  }
+
   /* ---------- Keyframes ---------- */
+  @keyframes rustle {
+    0%, 100% { transform: translateX(-50%) rotate(0); }
+    25% { transform: translateX(-50%) rotate(-4deg); }
+    50% { transform: translateX(-50%) rotate(3deg); }
+    75% { transform: translateX(-50%) rotate(-2deg); }
+  }
+  @keyframes hop {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    40% { transform: translateX(-50%) translateY(-16px) rotate(-4deg); }
+  }
+  @keyframes star-spin { 0% { transform: scale(1) rotate(0); } 50% { transform: scale(1.7) rotate(180deg); } 100% { transform: scale(1) rotate(360deg); } }
+  @keyframes wave-arm { from { transform: rotate(0); } to { transform: rotate(-45deg); } }
+  @keyframes ping { 0% { transform: scale(1); } 40% { transform: scale(1.9); filter: brightness(1.8); } 100% { transform: scale(1); } }
+  @keyframes splat {
+    0% { transform: scale(.2); opacity: 1; }
+    8% { transform: scale(1.08); }
+    14% { transform: scale(1); }
+    70% { transform: translateY(26px); opacity: .95; }
+    100% { transform: translateY(44px); opacity: 0; }
+  }
   @keyframes idle {
     0%, 72%, 100% { transform: rotate(0); }
     78% { transform: rotate(-3deg); }
@@ -660,7 +754,7 @@
 
 <canvas id="sky"></canvas>
 <canvas id="aurora"></canvas>
-<div class="moon" aria-hidden="true"></div>
+<div class="moon" id="moon" aria-hidden="true"></div>
 
 <!-- Santa's sleigh, flying right; crosses the moon every 30s -->
 <svg class="sleigh" viewBox="-40 0 300 50" aria-hidden="true">
@@ -720,6 +814,11 @@
     <path d="M12 88 L106 26 L200 88 L192 94 Q178 86 168 96 Q152 86 138 95 Q120 86 106 95 Q90 86 74 95 Q58 86 44 96 Q30 86 20 94 Z" fill="#f1f6fb"/>
     <g class="window">
       <rect x="46" y="106" width="38" height="32" fill="#fcd34d" style="filter:drop-shadow(0 0 10px #fbbf24)"/>
+      <g class="waver" fill="#4a2c17">
+        <circle cx="57" cy="117" r="5"/>
+        <path d="M50 138 Q50 124 57 124 Q64 124 64 138 Z"/>
+        <path class="wave-arm" d="M62 127 L71 114" stroke="#4a2c17" stroke-width="3" stroke-linecap="round" fill="none"/>
+      </g>
       <path d="M65 106 V138 M46 122 H84" stroke="#6b4423" stroke-width="3"/>
       <rect x="44" y="137" width="42" height="5" fill="#f1f6fb"/>
     </g>
@@ -772,12 +871,13 @@
     <button class="gift" id="gift" type="button" aria-label="Unwrap your gift">
       <span class="box"><span class="tag" id="tag"></span></span>
       <span class="seam"></span>
-      <span class="lid"><span class="bow" aria-hidden="true">&#127872;</span></span>
+      <span class="lid"><span class="snowcap" data-max="12" style="left:3px;right:3px"></span><span class="bow" aria-hidden="true">&#127872;</span></span>
     </button>
     <div class="shadow"></div>
     <div class="reveal" id="reveal" aria-live="polite">
       <div class="reveal-label">You're buying a gift for&hellip;</div>
       <div class="card">
+        <span class="snowcap" data-max="10" style="left:12px;right:12px"></span>
         <div class="name" id="name"></div>
         <div class="details" id="details"></div>
       </div>
@@ -791,18 +891,23 @@
 
 <div class="footer" id="footer">
   <div class="band">
+    <span class="snowcap" data-max="10" style="left:4px;right:4px"></span>
     &#129323; SHH&hellip; KEEP IT SECRET
     <div class="countdown" id="countdown"></div>
   </div>
 </div>
 
 <button class="hanger sound" id="sound" type="button" aria-label="Mute sound">
-  <span class="string"></span><span class="cap"></span><span class="ball" id="soundIcon">&#128266;</span>
+  <span class="string"></span><span class="cap"></span>
+  <span class="ball"><span class="snowcap" data-max="6" style="left:26%;right:26%;bottom:calc(100% - 4px)"></span><span id="soundIcon">&#128266;</span></span>
 </button>
 
 <button class="hanger wish-btn" id="wishBtn" type="button" hidden>
   <span class="string"></span>
-  <span class="tag-face"><span class="hole"></span>Wishlists</span>
+  <span class="tag-wrap">
+    <span class="snowcap" data-max="9" style="left:24%;right:24%"></span>
+    <span class="tag-face"><span class="hole"></span>Wishlists</span>
+  </span>
   <span class="dot" id="wishDot" hidden></span>
 </button>
 <div class="backdrop" id="backdrop"></div>
@@ -952,21 +1057,38 @@
           tone(f * 2, t + i * 0.08, 0.6, 0.03);
         });
       } else if (kind === "pop") {
-        const length = 0.35;
-        const buffer = audio.createBuffer(1, audio.sampleRate * length, audio.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length) ** 4;
-        const src = audio.createBufferSource();
-        const filter = audio.createBiquadFilter();
-        const gain = audio.createGain();
-        src.buffer = buffer;
-        filter.type = "lowpass";
-        filter.frequency.value = rand(700, 1400);
-        gain.gain.value = 0.18;
-        src.connect(filter).connect(gain).connect(audio.destination);
-        src.start();
+        const f = rand(700, 1400);
+        noise(0.35, "lowpass", f, f, 0.18);
+      } else if (kind === "note") {
+        // here `level` is the frequency to play
+        tone(level, t, 0.9, 0.12, "triangle");
+        tone(level * 2, t, 0.35, 0.03);
+      } else if (kind === "whoosh") {
+        noise(0.45, "bandpass", 400, 2600, 0.25, 1);
+      } else if (kind === "thud") {
+        tone(130, t, 0.25, 0.3);
+        tone(80, t, 0.3, 0.25);
+        noise(0.15, "lowpass", 600, 200, 0.3);
       }
     } catch {}
+  }
+
+  // A burst of filtered white noise; `decay` shapes how quickly it dies away
+  function noise(length, type, freqFrom, freqTo, volume, decay = 4) {
+    const t = audio.currentTime;
+    const buffer = audio.createBuffer(1, Math.ceil(audio.sampleRate * length), audio.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length) ** decay;
+    const src = audio.createBufferSource();
+    const filter = audio.createBiquadFilter();
+    const gain = audio.createGain();
+    src.buffer = buffer;
+    filter.type = type;
+    filter.frequency.setValueAtTime(freqFrom, t);
+    filter.frequency.exponentialRampToValueAtTime(freqTo, t + length);
+    gain.gain.value = volume;
+    src.connect(filter).connect(gain).connect(audio.destination);
+    src.start();
   }
 
   // ---------- Unwrap: three taps, then the big reveal ----------
@@ -985,6 +1107,7 @@
     if (busy || taps >= 3 || !match) return;
     busy = true;
     taps++;
+    shedSnow(gift);
     play("jingle", taps);
     if (navigator.vibrate) navigator.vibrate(taps < 3 ? [25 * taps, 40, 25 * taps] : [30, 50, 30, 50, 30, 50, 90]);
 
@@ -1277,7 +1400,7 @@
 
   // Big decorated tree (wide screens only): shaded tiers, wrapping garlands, glossy baubles
   (function heroTree() {
-    const tree = svgEl("svg", { class: "tree hero-tree wide-only", viewBox: "0 -8 100 150" });
+    const tree = svgEl("svg", { id: "heroTree", class: "tree hero-tree wide-only", viewBox: "0 -8 100 150" });
     const tiers = [[50, 6, 26, 48], [50, 28, 36, 80], [50, 54, 46, 116]];
     for (const [x, top, half, bottom] of tiers) {
       tree.append(svgEl("polygon", { points: `${x},${top} ${x + half},${bottom} ${x - half},${bottom}`, fill: "#166534" }));
@@ -1596,16 +1719,22 @@
   const COLORS = ["#dc2626", "#d4af37", "#fde68a", "#16a34a", "#ffffff"];
   let pieces = [];
 
-  function burstConfetti() {
+  // Shared by confetti, sparkles and falling snow
+  function addPieces(list) {
     if (reduceMotion) return;
+    const start = pieces.length === 0;
+    pieces.push(...list);
+    if (start) requestAnimationFrame(drawConfetti);
+  }
+
+  function burstConfetti() {
     const rect = gift.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
-    const start = pieces.length === 0;
-    for (let i = 0; i < 200; i++) {
+    addPieces(Array.from({ length: 200 }, (_, i) => {
       const angle = Math.random() * Math.PI * 2;
       const speed = rand(4, 13);
-      pieces.push({
+      return {
         x: cx, y: cy,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed - 6,
@@ -1614,9 +1743,16 @@
         rot: Math.random() * Math.PI,
         spin: (Math.random() - 0.5) * 0.4,
         color: COLORS[i % COLORS.length],
-      });
-    }
-    if (start) requestAnimationFrame(drawConfetti);
+      };
+    }));
+  }
+
+  function sparkle(x, y, color = "#fde68a", count = 18) {
+    addPieces(Array.from({ length: count }, () => {
+      const angle = rand(0, Math.PI * 2);
+      const speed = rand(2, 6);
+      return { x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 2, w: rand(3, 6), h: rand(3, 6), rot: rand(0, 3), spin: rand(-0.3, 0.3), color };
+    }));
   }
 
   function drawConfetti() {
@@ -1638,6 +1774,151 @@
     if (pieces.length) requestAnimationFrame(drawConfetti);
     else confetti.clearRect(0, 0, innerWidth, innerHeight);
   }
+
+  // ---------- Snow that builds up ----------
+  // Each .snowcap grows towards its data-max height (px) over about two minutes.
+  // Tapping the thing it sits on knocks the snow off.
+  const caps = [...document.querySelectorAll(".snowcap")].map((el) => ({ el, level: 0, max: Number(el.dataset.max) }));
+  function setSnow(cap, level) {
+    cap.level = level;
+    cap.el.style.setProperty("--snow", level.toFixed(2));
+  }
+  if (reduceMotion) caps.forEach((cap) => setSnow(cap, cap.max * 0.6));
+  else setInterval(() => caps.forEach((cap) => setSnow(cap, Math.min(cap.max, cap.level + cap.max / 240))), 500);
+
+  function shedSnow(container) {
+    const cap = caps.find((c) => container.contains(c.el));
+    if (!cap || cap.level < 1) return;
+    const r = cap.el.getBoundingClientRect();
+    addPieces(Array.from({ length: Math.round(cap.level * 3) }, () => ({
+      x: rand(r.left, r.right), y: r.bottom - rand(0, r.height),
+      vx: rand(-1.5, 1.5), vy: rand(-2, 0), w: rand(3, 6), h: rand(3, 6), rot: 0, spin: 0, color: "#ffffff",
+    })));
+    setSnow(cap, 0);
+  }
+  $("wishBtn").addEventListener("click", () => shedSnow($("wishBtn")));
+  soundBtn.addEventListener("click", () => shedSnow(soundBtn));
+  $("footer").addEventListener("click", () => shedSnow($("footer")));
+  document.querySelector(".card").addEventListener("click", (e) => shedSnow(e.currentTarget));
+
+  // ---------- Clickable scenery ----------
+  const PENTATONIC = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66, 1318.5];
+  const restartClass = (el, cls) => {
+    el.classList.remove(cls);
+    void el.getBoundingClientRect();  // force a reflow so the animation plays again
+    el.classList.add(cls);
+  };
+
+  // Fairy lights play a little tune. The bulbs are redrawn on resize, so listen on the <svg>.
+  $("lights").addEventListener("click", (e) => {
+    const bulb = e.target.closest(".bulb");
+    if (!bulb) return;
+    const index = [...$("lights").querySelectorAll(".bulb")].indexOf(bulb);
+    play("note", PENTATONIC[index % PENTATONIC.length]);
+    restartClass(bulb, "ping");
+    bulb.addEventListener("animationend", () => bulb.classList.remove("ping"), { once: true });
+    const r = bulb.getBoundingClientRect();
+    sparkle(r.left + r.width / 2, r.top + r.height / 2, bulb.getAttribute("fill"), 10);
+  });
+
+  // The moon calls Santa's sleigh across the sky
+  const sleigh = document.querySelector(".sleigh");
+  let sleighTimer = null;
+  $("moon").addEventListener("click", () => {
+    play("jingle", 2);
+    restartClass($("moon"), "glow");
+    setTimeout(() => $("moon").classList.remove("glow"), 1500);
+    if (reduceMotion) return;
+    sleigh.style.animation = "none";
+    void sleigh.offsetWidth;
+    sleigh.style.animation = "fly 16s linear";
+    clearTimeout(sleighTimer);
+    sleighTimer = setTimeout(() => { sleigh.style.animation = ""; }, 16000);  // back to the regular schedule
+  });
+
+  // The snowman throws a snowball at the screen
+  function splat(x, y) {
+    play("thud");
+    const s = document.createElement("div");
+    s.className = "splat";
+    s.style.left = `${x}px`;
+    s.style.top = `${y}px`;
+    s.style.rotate = `${rand(0, 360)}deg`;
+    document.body.append(s);
+    s.addEventListener("animationend", () => s.remove());
+    sparkle(x, y, "#ffffff", 14);
+  }
+  $("snowman").addEventListener("click", () => {
+    const snowman = $("snowman");
+    restartClass(snowman, "hop");
+    const r = snowman.getBoundingClientRect();
+    const throwsRight = r.left + r.width / 2 < innerWidth / 2;
+    const x0 = throwsRight ? r.right - r.width * 0.1 : r.left + r.width * 0.1;
+    const y0 = r.top + r.height * 0.4;
+    const x1 = innerWidth * rand(0.3, 0.7);
+    const y1 = innerHeight * rand(0.2, 0.5);
+    play("whoosh");
+    if (reduceMotion) { splat(x1, y1); return; }
+    const ball = document.createElement("div");
+    ball.className = "snowball";
+    document.body.append(ball);
+    const start = performance.now();
+    (function fly() {
+      const t = Math.min((performance.now() - start) / 650, 1);
+      ball.style.left = `${x0 + (x1 - x0) * t}px`;
+      ball.style.top = `${y0 + (y1 - y0) * t - Math.sin(t * Math.PI) * 120}px`;
+      ball.style.transform = `scale(${1 + t * 3})`;  // grows as it flies "towards" you
+      if (t < 1) requestAnimationFrame(fly);
+      else { ball.remove(); splat(x1, y1); }
+    })();
+  });
+
+  // Someone comes to the cabin window to wave, and the fire gets a poke
+  const cabin = document.querySelector(".cabin");
+  cabin.addEventListener("click", () => {
+    if (cabin.classList.contains("visit")) return;
+    cabin.classList.add("visit");
+    play("note", 659.25);
+    setTimeout(() => play("note", 523.25), 180);
+    const c = $("chimney").getBoundingClientRect();
+    for (let i = 0; i < 10; i++) {
+      smoke.push({ x: c.left + rand(-4, 4), y: c.top, r: rand(5, 9), a: 0.5, vx: rand(0.1, 0.5), vy: rand(-1.4, -0.7) });
+    }
+    setTimeout(() => cabin.classList.remove("visit"), 3200);
+  });
+
+  // The big tree's star spins and its lights go wild; small trees rustle and drop snow
+  $("trees").addEventListener("click", (e) => {
+    const tree = e.target.closest(".tree");
+    if (!tree) return;
+    if (tree.id === "heroTree") {
+      if (tree.classList.contains("party")) return;
+      tree.classList.add("party");
+      play("chime");
+      const star = tree.querySelector(".star-top").getBoundingClientRect();
+      sparkle(star.left + star.width / 2, star.top + star.height / 2, "#fde68a", 40);
+      setTimeout(() => tree.classList.remove("party"), 2500);
+      return;
+    }
+    restartClass(tree, "rustle");
+    play("whoosh");
+    const r = tree.getBoundingClientRect();
+    addPieces(Array.from({ length: 14 }, () => ({
+      x: rand(r.left + r.width * 0.2, r.right - r.width * 0.2), y: rand(r.top, r.top + r.height * 0.5),
+      vx: rand(-1, 1), vy: rand(-1.5, 0), w: rand(2, 5), h: rand(2, 5), rot: 0, spin: 0, color: "#ffffff",
+    })));
+  });
+
+  // Every so often, swap the countdown for a hint that the scene is tappable
+  (function psst() {
+    const countdown = $("countdown");
+    const original = countdown.textContent;
+    let showingHint = false;
+    setTimeout(() => setInterval(() => {
+      showingHint = !showingHint;
+      countdown.textContent = showingHint ? "✨ Psst… try tapping things!" : original;
+    }, 7000), 15000);
+  })();
 </script>
 </body>
 </html>
