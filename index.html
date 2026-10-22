@@ -1966,7 +1966,14 @@
     $("tabTheirs").textContent = `\u{1F381} ${match.r}'s list`;
     $("seeWishLabel").textContent = `See ${match.r}'s wishlist`;
     $("seeWish").hidden = false;
-    if (typeof onboardingNeeded === "function" && onboardingNeeded()) $("joinGame").hidden = false;
+    if (typeof onboardingNeeded === "function" && onboardingNeeded()) {
+      $("joinGame").hidden = false;
+      // Let the reveal sink in, then walk them into the game (once per visit; the tag stays if they close it)
+      if (!sleuth.prompted) {
+        sleuth.prompted = true;
+        setTimeout(() => { if (!$("office").classList.contains("open")) startOnboarding(); }, 3200);
+      }
+    }
     renderTheirs();
     loadTheirs();
   }
