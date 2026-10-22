@@ -23,6 +23,11 @@
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
+  /* No grey tap flash or accidental text selection when tapping things on phones */
+  html { -webkit-tap-highlight-color: transparent; }
+  body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  input, textarea, select, .items .text, .clue-note .a { -webkit-user-select: text; user-select: text; }
+  .moon:focus, .scene svg:focus, .scene svg *:focus, .lights *:focus { outline: none; }
   html, body { margin: 0; height: 100%; }
   body {
     overflow: hidden;
@@ -63,6 +68,7 @@
     pointer-events: none;
   }
   .sleigh .bob { animation: bob .45s ease-in-out infinite alternate; }
+  .dropped-gift { position: fixed; z-index: 2; left: 0; top: 0; pointer-events: none; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, .35)); }
   .sleigh .nose { filter: drop-shadow(0 0 3px #ff3b3b) drop-shadow(0 0 6px #ff3b3b); }
   .sleigh .trail circle { animation: blink 1s ease-in-out infinite; }
 
@@ -3408,20 +3414,80 @@
   $("lights").addEventListener("click", onBulbClick);
   $("officeLights").addEventListener("click", onBulbClick);
 
-  // The moon calls Santa's sleigh across the sky
+  // The moon calls Santa: the sleigh dashes across the sky dropping presents (then needs a rest)
   const sleigh = document.querySelector(".sleigh");
-  let sleighTimer = null;
+  const SLEIGH_COOLDOWN = 12000;
+  let sleighReadyAt = 0;
+  let sleighDashing = false;
+
   $("moon").addEventListener("click", () => {
-    play("jingle", 2);
     restartClass($("moon"), "glow");
     setTimeout(() => $("moon").classList.remove("glow"), 1500);
-    if (reduceMotion) return;
-    sleigh.style.animation = "none";
-    void sleigh.offsetWidth;
-    sleigh.style.animation = "fly 16s linear";
-    clearTimeout(sleighTimer);
-    sleighTimer = setTimeout(() => { sleigh.style.animation = ""; }, 16000);  // back to the regular schedule
+    if (sleighDashing || performance.now() < sleighReadyAt || reduceMotion) {
+      play("note", 523.25);  // Santa's restocking: just a soft twinkle
+      return;
+    }
+    play("jingle", 3);
+    dashSleigh();
   });
+
+  function dropPresent(x, y) {
+    const gift = document.createElement("span");
+    gift.className = "dropped-gift";
+    gift.textContent = "\u{1F381}";
+    gift.style.fontSize = `${rand(18, 28)}px`;
+    document.body.append(gift);
+    const landY = innerHeight * rand(0.74, 0.9);
+    const vx = rand(-0.6, 0.6);
+    const spin = rand(-6, 6);
+    const start = performance.now();
+    let vy = rand(0.5, 1.5);
+    let px = x;
+    let py = y;
+    (function fall() {
+      const age = performance.now() - start;
+      if (py < landY) {
+        vy += 0.28;
+        px += vx;
+        py = Math.min(landY, py + vy);
+      }
+      gift.style.transform = `translate(${px}px, ${py}px) rotate(${age * spin / 100}deg)`;
+      gift.style.opacity = py >= landY ? String(Math.max(0, 1 - (age - 900) / 1500)) : "1";
+      if (gift.style.opacity !== "0") requestAnimationFrame(fall);
+      else gift.remove();
+    })();
+  }
+
+  function dashSleigh() {
+    sleighDashing = true;
+    const width = sleigh.getBoundingClientRect().width;
+    const duration = innerWidth < 600 ? 2600 : 3400;
+    const start = performance.now();
+    let lastDrop = 0;
+    sleigh.style.animation = "none";
+    sleigh.style.zIndex = "5";  // fly in front of the title for the big moment
+    (function frame() {
+      const t = Math.min((performance.now() - start) / duration, 1);
+      const x = -width + t * (innerWidth + width * 2);
+      const y = 30 - Math.sin(t * Math.PI) * 40;  // a gentle swoop across the moon
+      sleigh.style.transform = `translate(${x}px, ${y}px) rotate(-6deg)`;
+      // the sleigh itself is near the left of the picture; drop gifts from there while it's on screen
+      const dropX = x + width * 0.2;
+      if (performance.now() - lastDrop > 170 && dropX > 0 && dropX < innerWidth) {
+        lastDrop = performance.now();
+        dropPresent(dropX, sleigh.getBoundingClientRect().top + 24);
+      }
+      if (t < 1) {
+        requestAnimationFrame(frame);
+        return;
+      }
+      sleigh.style.transform = "";
+      sleigh.style.zIndex = "";
+      sleigh.style.animation = "";  // back to its usual slow fly-by schedule
+      sleighDashing = false;
+      sleighReadyAt = performance.now() + SLEIGH_COOLDOWN;
+    })();
+  }
 
   // The snowman throws a snowball at the screen
   function splat(x, y) {
