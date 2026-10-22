@@ -40,7 +40,7 @@
   /* ---------- Layers, back to front ---------- */
   canvas { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
   #sky { z-index: 0; }
-  #aurora { z-index: 0; height: 60vh; opacity: .5; mix-blend-mode: screen; }
+  #aurora { z-index: 0; height: 60vh; opacity: .68; mix-blend-mode: screen; filter: blur(10px); image-rendering: auto; }
   .moon {
     position: fixed;
     z-index: 0;
@@ -3433,8 +3433,9 @@
   requestAnimationFrame(drawSky);
 
   // ---------- Northern lights ----------
-  // Drawn at 1/8 resolution and stretched by CSS, which gives the soft blur for free.
-  const aurora = fitCanvas($("aurora"), 1 / 8);
+  // Drawn at low resolution to keep it cheap, then softened with a CSS blur. (Relying on the stretch
+  // alone looked blocky on phones, which may scale canvases up without smoothing.)
+  const aurora = fitCanvas($("aurora"), 1 / 3);
   const RIBBONS = [
     { y: 0.32, amp: 0.1, freq: 1.3, speed: 0.00011, h: 0.34, rgb: "70, 255, 170" },
     { y: 0.22, amp: 0.08, freq: 2.1, speed: -0.00008, h: 0.28, rgb: "110, 210, 255" },
