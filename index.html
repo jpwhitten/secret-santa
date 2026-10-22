@@ -244,6 +244,33 @@
   .file-facts .a { font: 700 24px 'Caveat', cursive; color: #1f2937; }
   .note-text { margin: 0 0 14px; font-size: 14px; font-style: italic; color: #6b7280; }
 
+  /* Avatars */
+  .photo svg, .mini-av svg, .av-opt svg { display: block; width: 100%; height: 100%; }
+  .mini-av {
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    margin-right: 8px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #9ca3af;
+    color: #fff;
+    font: bold 11px/28px Arial, Helvetica, sans-serif;
+    text-align: center;
+    vertical-align: middle;
+  }
+  .av-preview { width: 150px; margin: 0 auto 14px; transform: rotate(-2deg); }
+  .av-preview svg { display: block; width: 100%; aspect-ratio: 1; }
+  .av-row { margin-bottom: 12px; }
+  .av-label { margin-bottom: 6px; font: bold 13px Arial, Helvetica, sans-serif; color: #374151; }
+  .av-options { display: flex; flex-wrap: wrap; gap: 8px; }
+  .av-opt { width: 52px; height: 52px; padding: 0; overflow: hidden; border: 3px solid transparent; border-radius: 10px; background: #fff; cursor: pointer; box-shadow: 0 1px 3px rgba(0, 0, 0, .2); }
+  .av-opt[aria-pressed="true"] { border-color: var(--red); }
+  .swatch { width: 34px; height: 34px; padding: 0; border: 3px solid #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0 0 2px #e2cf94; }
+  .swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--red); }
+  .swatch.none { background: linear-gradient(45deg, #fff 45%, #dc2626 45% 55%, #fff 55%); }
+  .av-random { margin-bottom: 8px; background: #14532d; }
+
   /* ---------- Detective's office (full screen) ---------- */
   .office {
     position: fixed;
@@ -1369,6 +1396,7 @@
     <div class="wall-notes">
       <button class="wall-note" id="openFacts" type="button" style="--r:-3deg"><span class="pin"></span><span id="openFactsLabel">&#128193; My fact file</span></button>
       <button class="wall-note" id="openBoard" type="button" style="--r:2deg"><span class="pin"></span>&#127942; Leaderboard</button>
+      <button class="wall-note" id="openAvatar" type="button" style="--r:2.5deg"><span class="pin"></span>&#127912; My avatar</button>
       <button class="wall-note" id="openRules" type="button" style="--r:-1deg"><span class="pin"></span>&#128220; How to play</button>
     </div>
 
@@ -1923,6 +1951,110 @@
     $("gameDot").hidden = newestNews() <= seenNews();
   }
 
+  // ---------- Avatars ----------
+  // Everyone builds a festive character. Saved avatars are cleaned against these lists before drawing,
+  // so only our own constant values ever end up in the SVG markup.
+  const AVATAR = {
+    bases: [["elf", "Elf"], ["santa", "Santa"], ["reindeer", "Reindeer"], ["snowman", "Snowman"],
+            ["ginger", "Gingerbread"], ["penguin", "Penguin"], ["bear", "Polar bear"], ["fox", "Fox"]],
+    hats: [["none", "No hat"], ["santa", "Santa hat"], ["elf", "Elf hat"], ["beanie", "Bobble hat"], ["top", "Top hat"], ["crown", "Crown"]],
+    skins: ["#f8d5b8", "#eebd95", "#d29a6b", "#a86d43", "#6e4426"],
+    scarves: ["none", "#dc2626", "#16a34a", "#2563eb", "#facc15", "#9333ea"],
+    backgrounds: ["#b91c1c", "#166534", "#1d4ed8", "#7c3aed", "#b45309", "#0f766e"],
+  };
+  const HAS_SKIN = ["elf", "santa"];
+  const BODY_COLOUR = { elf: "#15803d", santa: "#dc2626", reindeer: "#7c4a21", snowman: "#f8fafc", ginger: "#c27a34", penguin: "#1f2937", bear: "#f1f5f9", fox: "#ea580c" };
+  const DEFAULT_AVATAR = { b: "elf", h: "santa", k: AVATAR.skins[0], s: AVATAR.scarves[1], g: AVATAR.backgrounds[2] };
+
+  function cleanAvatar(a = {}) {
+    const pick = (value, allowed, fallback) => (allowed.includes(value) ? value : fallback);
+    return {
+      b: pick(a.b, AVATAR.bases.map(([id]) => id), DEFAULT_AVATAR.b),
+      h: pick(a.h, AVATAR.hats.map(([id]) => id), DEFAULT_AVATAR.h),
+      k: pick(a.k, AVATAR.skins, DEFAULT_AVATAR.k),
+      s: pick(a.s, AVATAR.scarves, DEFAULT_AVATAR.s),
+      g: pick(a.g, AVATAR.backgrounds, DEFAULT_AVATAR.g),
+    };
+  }
+
+  const avEyes = (y, fill = "#1f2937", r = 2.6) => `<circle cx="42.5" cy="${y}" r="${r}" fill="${fill}"/><circle cx="57.5" cy="${y}" r="${r}" fill="${fill}"/>`;
+  const avCheeks = (y) => `<circle cx="37" cy="${y}" r="4" fill="#f87171" opacity=".4"/><circle cx="63" cy="${y}" r="4" fill="#f87171" opacity=".4"/>`;
+
+  function avatarHead(base, skin) {
+    switch (base) {
+      case "santa": return `<circle cx="50" cy="50" r="22" fill="${skin}"/>${avEyes(47)}${avCheeks(54)}<circle cx="50" cy="54" r="3" fill="#e8977a"/>
+        <path d="M27 52 Q28 82 50 84 Q72 82 73 52 Q64 62 50 61 Q36 62 27 52Z" fill="#fff"/>
+        <path d="M39 61 Q45 56 50 60 Q55 56 61 61 Q55 65 50 62 Q45 65 39 61Z" fill="#f1f5f9" stroke="#e2e8f0"/>`;
+      case "reindeer": return `<path d="M38 34 L31 16 M34 25 L25 21 M62 34 L69 16 M66 25 L75 21" stroke="#92400e" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <ellipse cx="28" cy="44" rx="8" ry="4.5" fill="#7c4a21" transform="rotate(-25 28 44)"/><ellipse cx="72" cy="44" rx="8" ry="4.5" fill="#7c4a21" transform="rotate(25 72 44)"/>
+        <ellipse cx="50" cy="54" rx="21" ry="23" fill="#8b5a2b"/><ellipse cx="50" cy="66" rx="12" ry="9" fill="#c08a5a"/>${avEyes(49)}
+        <circle cx="50" cy="62" r="5" fill="#dc2626"/><circle cx="48.5" cy="60.5" r="1.5" fill="#fff" opacity=".7"/>`;
+      case "snowman": return `<circle cx="50" cy="52" r="23" fill="#fff" stroke="#cbd5e1" stroke-width="1.5"/>${avEyes(48, "#111827", 2.8)}
+        <polygon points="50,53 67,56 50,59" fill="#f97316"/>
+        <g fill="#111827"><circle cx="42" cy="64" r="1.6"/><circle cx="46.5" cy="66.5" r="1.6"/><circle cx="53.5" cy="66.5" r="1.6"/><circle cx="58" cy="64" r="1.6"/></g>`;
+      case "ginger": return `<circle cx="50" cy="52" r="23" fill="#c27a34"/>
+        <circle cx="42.5" cy="49" r="3" fill="#fff"/><circle cx="57.5" cy="49" r="3" fill="#fff"/>${avEyes(49, "#1f2937", 1.4)}
+        <path d="M42 60 Q50 67 58 60" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="37" cy="57" r="3" fill="#f472b6" opacity=".7"/><circle cx="63" cy="57" r="3" fill="#f472b6" opacity=".7"/>`;
+      case "penguin": return `<circle cx="50" cy="52" r="24" fill="#1f2937"/>
+        <ellipse cx="43.5" cy="56" rx="10" ry="13" fill="#fff"/><ellipse cx="56.5" cy="56" rx="10" ry="13" fill="#fff"/>
+        ${avEyes(52, "#111827", 2.4)}<polygon points="45,59 55,59 50,66" fill="#f59e0b"/>`;
+      case "bear": return `<circle cx="31" cy="33" r="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/><circle cx="69" cy="33" r="8" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+        <circle cx="31" cy="33" r="4" fill="#e2e8f0"/><circle cx="69" cy="33" r="4" fill="#e2e8f0"/>
+        <circle cx="50" cy="52" r="23" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>${avEyes(48)}
+        <ellipse cx="50" cy="60" rx="10" ry="8" fill="#e2e8f0"/><ellipse cx="50" cy="56.5" rx="4" ry="3" fill="#1f2937"/>
+        <path d="M46 62 Q50 65 54 62" fill="none" stroke="#1f2937" stroke-width="1.5" stroke-linecap="round"/>`;
+      case "fox": return `<polygon points="28,42 33,16 47,32" fill="#ea580c"/><polygon points="72,42 67,16 53,32" fill="#ea580c"/>
+        <polygon points="32,36 34,22 42,31" fill="#fde68a"/><polygon points="68,36 66,22 58,31" fill="#fde68a"/>
+        <path d="M25 42 Q50 26 75 42 Q74 62 50 78 Q26 62 25 42Z" fill="#ea580c"/>
+        <path d="M27 48 Q40 60 50 78 Q30 66 27 48Z" fill="#fff"/><path d="M73 48 Q60 60 50 78 Q70 66 73 48Z" fill="#fff"/>
+        ${avEyes(50)}<circle cx="50" cy="75" r="3" fill="#1f2937"/>`;
+      default: return `<polygon points="28,48 12,38 30,60" fill="${skin}"/><polygon points="72,48 88,38 70,60" fill="${skin}"/>
+        <circle cx="50" cy="52" r="23" fill="${skin}"/>${avEyes(50)}${avCheeks(58)}
+        <path d="M43 60 Q50 66 57 60" fill="none" stroke="#7c2d12" stroke-width="2" stroke-linecap="round"/>`;
+    }
+  }
+
+  function avatarBody(base) {
+    const outline = base === "snowman" || base === "bear" ? ' stroke="#cbd5e1" stroke-width="1.5"' : "";
+    const extras = {
+      elf: `<polygon points="30,82 36,88 42,82 50,88 58,82 64,88 70,82 70,79 30,79" fill="#dc2626"/>`,
+      santa: `<rect x="14" y="94" width="72" height="6" fill="#111827"/><rect x="45" y="93" width="10" height="8" fill="none" stroke="#facc15" stroke-width="2"/>`,
+      snowman: `<circle cx="50" cy="90" r="2.5" fill="#111827"/><circle cx="50" cy="98" r="2.5" fill="#111827"/>`,
+      ginger: `<circle cx="50" cy="90" r="2.5" fill="#fff"/><circle cx="50" cy="98" r="2.5" fill="#fff"/>`,
+      penguin: `<ellipse cx="50" cy="108" rx="20" ry="24" fill="#fff"/>`,
+    };
+    return `<ellipse cx="50" cy="106" rx="36" ry="28" fill="${BODY_COLOUR[base]}"${outline}/>${extras[base] || ""}`;
+  }
+
+  function avatarHat(hat, scarf) {
+    const knit = scarf === "none" ? "#2563eb" : scarf;
+    switch (hat) {
+      case "santa": return `<path d="M29 33 C32 14 56 6 70 12 C78 16 82 22 82 28 L74 28 C72 22 66 20 62 22 C68 26 71 30 71 33 Z" fill="#dc2626"/>
+        <rect x="26" y="29" width="48" height="8" rx="4" fill="#fff"/><circle cx="80" cy="29" r="5" fill="#fff"/>`;
+      case "elf": return `<polygon points="31,32 69,32 58,4" fill="#16a34a"/><rect x="28" y="28" width="44" height="7" rx="3.5" fill="#dc2626"/><circle cx="58" cy="5" r="3.5" fill="#facc15"/>`;
+      case "beanie": return `<path d="M27 36 Q27 9 50 9 Q73 9 73 36Z" fill="${knit}"/><rect x="25" y="29" width="50" height="9" rx="4.5" fill="${knit}"/>
+        <rect x="25" y="29" width="50" height="9" rx="4.5" fill="#fff" opacity=".3"/><circle cx="50" cy="8" r="6" fill="#fff"/>`;
+      case "top": return `<rect x="34" y="4" width="32" height="27" rx="2" fill="#111827"/><rect x="34" y="22" width="32" height="5" fill="#b91c1c"/>
+        <rect x="25" y="28" width="50" height="6" rx="3" fill="#111827"/>`;
+      case "crown": return `<polygon points="31,32 31,14 41,23 50,9 59,23 69,14 69,32" fill="#facc15" stroke="#b45309" stroke-width="1.5" stroke-linejoin="round"/>
+        <circle cx="50" cy="26" r="2.5" fill="#dc2626"/><circle cx="39" cy="27" r="2" fill="#2563eb"/><circle cx="61" cy="27" r="2" fill="#16a34a"/>`;
+      default: return "";
+    }
+  }
+
+  function avatarSVG(raw) {
+    const a = cleanAvatar(raw);
+    const scarf = a.s === "none" ? "" : `<rect x="31" y="73" width="38" height="9" rx="4.5" fill="${a.s}"/>
+      <rect x="55" y="77" width="9" height="20" rx="3" fill="${a.s}" transform="rotate(8 59 77)"/>
+      <path d="M37 73v9 M45 73v9 M53 73v9 M61 73v9" stroke="#fff" stroke-width="1.5" opacity=".35"/>`;
+    return `<svg viewBox="0 0 100 100" aria-hidden="true">
+      <rect width="100" height="100" fill="${a.g}"/><circle cx="28" cy="22" r="42" fill="#fff" opacity=".12"/>
+      <g fill="#fff" opacity=".5"><circle cx="12" cy="14" r="1.4"/><circle cx="88" cy="18" r="1.2"/><circle cx="16" cy="72" r="1"/><circle cx="90" cy="62" r="1.4"/></g>
+      ${avatarBody(a.b)}${scarf}${avatarHead(a.b, a.k)}${avatarHat(a.h, a.s)}
+    </svg>`;
+  }
+
   // A fixed tilt and photo colour per name, so the board looks hand-pinned but doesn't shuffle on every redraw
   function hashOf(text) {
     let h = 0;
@@ -1937,10 +2069,10 @@
     const card = el("div", { className: `polaroid${prime ? " prime" : ""}` });
     card.style.setProperty("--r", `${prime ? -2 : (h % 7) - 3}deg`);
     card.style.setProperty("--bg", PHOTO_COLOURS[h % PHOTO_COLOURS.length]);
-    card.append(
-      el("span", { className: "pin" }),
-      el("div", { className: "photo", textContent: name === "?" ? "?" : initials(name) }),
-      el("div", { className: "cap", textContent: caption }));
+    const photo = el("div", { className: "photo", textContent: name === "?" ? "?" : initials(name) });
+    const avatar = sleuth.data.avatars && sleuth.data.avatars[name];
+    if (avatar) photo.innerHTML = avatarSVG(avatar);  // safe: avatarSVG only uses whitelisted values
+    card.append(el("span", { className: "pin" }), photo, el("div", { className: "cap", textContent: caption }));
     if (sub) card.append(el("div", { className: "sub", textContent: sub }));
     return card;
   }
@@ -2178,6 +2310,24 @@
         body.append(save);
       }
       body.append(el("p", { className: "status", id: "factsStatus" }));
+    } else if (kind === "avatar") {
+      $("folderTab").textContent = "DISGUISE KIT";
+      $("caseTitle").textContent = "My avatar";
+      sleuth.avatarDraft = cleanAvatar((d.avatars || {})[match.g]);
+      body.append(
+        el("p", { className: "note-text", textContent: "Build the character that represents you on everyone's suspect board." }),
+        el("div", { className: "polaroid av-preview", id: "avPreview" }),
+        el("div", { id: "avOptions" }));
+      const surprise = el("button", { className: "big-btn av-random", type: "button", textContent: "\u{1F3B2} Surprise me" });
+      surprise.addEventListener("click", () => {
+        const any = (list) => list[Math.floor(Math.random() * list.length)];
+        sleuth.avatarDraft = { b: any(AVATAR.bases)[0], h: any(AVATAR.hats)[0], k: any(AVATAR.skins), s: any(AVATAR.scarves), g: any(AVATAR.backgrounds) };
+        renderAvatarKit();
+      });
+      const save = el("button", { className: "big-btn", type: "button", textContent: "Save my avatar" });
+      save.addEventListener("click", saveAvatar);
+      body.append(surprise, save, el("p", { className: "status", id: "avatarStatus" }));
+      renderAvatarKit();
     } else if (kind === "board") {
       $("folderTab").textContent = "LEADERBOARD";
       $("caseTitle").textContent = "Leaderboard";
@@ -2191,6 +2341,49 @@
     }
     $("caseModal").classList.add("open");
     $("caseClose").focus();
+  }
+
+  // The Disguise kit: a live preview plus one row of choices per avatar part. Choice thumbnails are
+  // the player's own avatar with just that part swapped, so they can see exactly what they'd get.
+  function renderAvatarKit() {
+    const draft = sleuth.avatarDraft;
+    $("avPreview").innerHTML = avatarSVG(draft);
+    const options = $("avOptions");
+    options.replaceChildren();
+    const row = (label, buttons) => options.append(el("div", { className: "av-row" }, el("div", { className: "av-label", textContent: label }), el("div", { className: "av-options" }, ...buttons)));
+    const choice = (part, value, title, { swatch = false } = {}) => {
+      const button = el("button", { type: "button", className: swatch ? "swatch" : "av-opt", title });
+      button.setAttribute("aria-label", title);
+      button.setAttribute("aria-pressed", String(draft[part] === value));
+      if (swatch) {
+        if (value === "none") button.classList.add("none");
+        else button.style.background = value;
+      } else {
+        button.innerHTML = avatarSVG({ ...draft, [part]: value, ...(part === "b" ? { h: "none" } : {}) });
+      }
+      button.addEventListener("click", () => {
+        draft[part] = value;
+        renderAvatarKit();
+      });
+      return button;
+    };
+    row("Character", AVATAR.bases.map(([id, name]) => choice("b", id, name)));
+    row("Hat", AVATAR.hats.map(([id, name]) => choice("h", id, name)));
+    if (HAS_SKIN.includes(draft.b)) row("Skin", AVATAR.skins.map((c, i) => choice("k", c, `Skin tone ${i + 1}`, { swatch: true })));
+    row("Scarf", AVATAR.scarves.map((c) => choice("s", c, c === "none" ? "No scarf" : "Scarf colour", { swatch: true })));
+    row("Background", AVATAR.backgrounds.map((c) => choice("g", c, "Background colour", { swatch: true })));
+  }
+
+  async function saveAvatar() {
+    setStatus("avatarStatus", "Saving…");
+    try {
+      const saved = await rpc("santa_set_avatar", { p_year: year, p_name: match.g, p_token: match.k, p_avatar: sleuth.avatarDraft });
+      sleuth.data.avatars = { ...(sleuth.data.avatars || {}), [match.g]: saved };
+      setStatus("avatarStatus", "Saved ✓ Looking festive!");
+      play("chime");
+    } catch (err) {
+      setStatus("avatarStatus", friendlyError(err), true);
+    }
   }
 
   function closeCase() {
@@ -2227,7 +2420,9 @@
       const right = d.revealed
         ? el("span", { className: "st" }, `\u{1F50D} ${row.detective} + \u{1F3AD} ${row.stealth} = `, el("span", { className: "pts", textContent: `${row.total}` }))
         : el("span", { className: "st", textContent: row.locked_pins ? `\u{1F512} ${row.locked_pins}/10 pins locked` : "\u{1F50E} still sleuthing" });
-      list.append(el("li", { className: row.name === match.g ? "me" : "" }, el("span", { textContent: label }), right));
+      const face = el("span", { className: "mini-av", textContent: initials(row.name) });
+      if (d.avatars && d.avatars[row.name]) face.innerHTML = avatarSVG(d.avatars[row.name]);
+      list.append(el("li", { className: row.name === match.g ? "me" : "" }, el("span", {}, face, label), right));
     }
   }
 
@@ -2242,9 +2437,14 @@
     play("jingle", 1);
     loadGame().catch(() => {});  // refresh in the background in case a clue has just unlocked
     const factsDone = QUESTIONS.every((q) => sleuth.data.my_facts[q.id]);
-    if (!factsDone && !sleuth.data.facts_locked && !sleuth.promptedFacts) {
-      sleuth.promptedFacts = true;  // nudge once per visit to fill in the fact file
-      setTimeout(() => openCase("facts"), 700);
+    // Nudge (once per visit) towards whatever's missing: the fact file first, then an avatar
+    if (!sleuth.prompted) {
+      const needsFacts = !factsDone && !sleuth.data.facts_locked;
+      const needsAvatar = !(sleuth.data.avatars || {})[match.g];
+      if (needsFacts || needsAvatar) {
+        sleuth.prompted = true;
+        setTimeout(() => openCase(needsFacts ? "facts" : "avatar"), 700);
+      }
     }
   }
 
@@ -2269,6 +2469,7 @@
     $("openFacts").addEventListener("click", () => openCase("facts"));
     $("openBoard").addEventListener("click", () => openCase("board"));
     $("openRules").addEventListener("click", () => openCase("rules"));
+    $("openAvatar").addEventListener("click", () => openCase("avatar"));
     $("caseClose").addEventListener("click", closeCase);
     $("caseModal").addEventListener("click", (e) => { if (e.target === $("caseModal")) closeCase(); });
     $("closeCase").addEventListener("click", () => {
