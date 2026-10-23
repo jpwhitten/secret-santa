@@ -2618,7 +2618,7 @@
 
     if (d.revealed) {
       const mine = d.board.find((row) => row.name === match.g);
-      if (mine) chips.append(el("span", { className: "chip", textContent: `\2B55 Circle points: ${mine.map}` }));
+      if (mine) chips.append(el("span", { className: "chip", textContent: `⭕ Circle points: ${mine.map}` }));
     } else {
       chips.append(el("span", { className: "chip", textContent: `\u2B55 ${guessed} of ${cases.length} cases guessed \u00b7 \u{1F512} ${lockedCount} locked` }));
       chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} Lock now: \u00d7${currentMultiplier()}` }));
