@@ -540,7 +540,7 @@
   .case-status { min-height: 1.3em; margin: 12px 0 0; text-align: center; font-style: italic; color: #fde9c7; }
   .case-status.error { color: #fca5a5; }
 
-  /* Two boards on the wall: your own case, and the Family Map */
+  /* Two boards on the wall: your own case, and the Circle of Santas */
   .board-tabs { position: relative; z-index: 2; display: flex; justify-content: center; gap: 6px; }
   .board-tab {
     padding: 10px 18px 12px;
@@ -1641,7 +1641,7 @@
 
     <div class="board-tabs" role="tablist">
       <button class="board-tab" id="tabCase" type="button" role="tab" aria-selected="true">&#128269; My case</button>
-      <button class="board-tab" id="tabMap" type="button" role="tab" aria-selected="false">&#128506;&#65039; Family map</button>
+      <button class="board-tab" id="tabMap" type="button" role="tab" aria-selected="false">&#11093; Circle of Santas</button>
     </div>
     <div class="board-row" id="boardRow">
       <svg class="side-strings" id="sideStrings" aria-hidden="true"></svg>
@@ -1655,7 +1655,7 @@
       <div class="stamp" id="stamp" hidden></div>
     </div>
     <div class="corkboard" id="mapBoard" hidden>
-      <div class="suspects-title">THE FAMILY MAP</div>
+      <div class="suspects-title">THE CIRCLE OF SANTAS</div>
       <p class="map-intro" id="mapIntro"></p>
       <div class="map-grid" id="mapGrid"></div>
     </div>
@@ -1781,8 +1781,8 @@
     <li><strong>Hedge your bets:</strong> lock a hunch early for big points, and keep some pins back for when the clues firm up.</li>
     <li><strong>Stay hidden.</strong> As a Santa you start with 10 stealth points and lose 1 for every pin your giftee puts in you. (If they don't place all 10 pins, you get 5. No complete fact file, no stealth points.)</li>
     <li><strong>Fact files must be true.</strong> Out loud, though, everyone denies everything &mdash; lying is part of the game!</li>
-    <li><strong>The Family Map:</strong> guess who is buying for <em>everyone else</em> too. Each case has a 20-point pot, split between everyone who gets it right &mdash; so a case only you crack pays the full 20. Earlier lock-ins take a bigger share, just like pins.</li>
-    <li><strong>Map stealth:</strong> as a Santa you also start with 20 points and lose 4 for every person who correctly maps who you're buying for.</li>
+    <li><strong>The Circle of Santas:</strong> guess who is buying for <em>everyone else</em> too. Each case has a 20-point pot, split between everyone who gets it right &mdash; so a case only you crack pays the full 20. Earlier lock-ins take a bigger share, just like pins.</li>
+    <li><strong>Circle stealth:</strong> as a Santa you also earn up to 20 points for the share of people who guess wrong about who you're buying for in the Circle. Fool everyone who tries and it's all 20; if nobody tries, you get 5.</li>
     <li>Your Santa and the scores are revealed on Christmas Day. &#127876;</li>
   </ol>
 </template>
@@ -2332,7 +2332,7 @@
   async function loadGame() {
     sleuth.data = await rpc("santa_get_game", { p_year: year, p_name: match.g, p_token: match.k });
     sleuth.draft = { ...sleuth.data.guess.tokens };
-    // Family Map guesses that aren't locked yet can still be changed
+    // Circle of Santas guesses that aren't locked yet can still be changed
     sleuth.data.map = sleuth.data.map || {};
     sleuth.mapDraft = Object.fromEntries(Object.entries(sleuth.data.map || {}).filter(([, g]) => g.c === null).map(([who, g]) => [who, g.s]));
     if ($("office").classList.contains("open")) renderOffice();
@@ -2603,7 +2603,7 @@
     updateGameDot();
   }
 
-  // ---------- The Family Map: guess everyone else's Santa ----------
+  // ---------- The Circle of Santas: guess everyone else's Santa ----------
   const MAP_POT = 20;
   const mapCases = () => sleuth.data.players.filter((p) => p !== match.g);
   const mapLocked = (who) => sleuth.data.map[who] && sleuth.data.map[who].c !== null;
@@ -2618,9 +2618,9 @@
 
     if (d.revealed) {
       const mine = d.board.find((row) => row.name === match.g);
-      if (mine) chips.append(el("span", { className: "chip", textContent: `\u{1F5FA}\u{FE0F} Map points: ${mine.map}` }));
+      if (mine) chips.append(el("span", { className: "chip", textContent: `\2B55 Circle points: ${mine.map}` }));
     } else {
-      chips.append(el("span", { className: "chip", textContent: `\u{1F5FA}\u{FE0F} ${guessed} of ${cases.length} cases guessed \u00b7 \u{1F512} ${lockedCount} locked` }));
+      chips.append(el("span", { className: "chip", textContent: `\u2B55 ${guessed} of ${cases.length} cases guessed \u00b7 \u{1F512} ${lockedCount} locked` }));
       chips.append(el("span", { className: "chip", textContent: `\u{1F3C6} Lock now: \u00d7${currentMultiplier()}` }));
     }
     $("mapIntro").textContent = d.revealed
@@ -2983,7 +2983,7 @@
     const d = sleuth.data;
     if (!$("boardList")) return;
     $("boardNote").textContent = d.revealed
-      ? "Final scores: \u{1F50D} your case \u00b7 \u{1F5FA}\u{FE0F} family map \u00b7 \u{1F3AD} stealth."
+      ? "Final scores: \u{1F50D} your case \u00b7 \u2B55 circle \u00b7 \u{1F3AD} stealth."
       : "Scores appear on Christmas Day. For now, here's how much each detective has locked in.";
     const list = $("boardList");
     list.replaceChildren();
@@ -2993,8 +2993,8 @@
       const medal = d.revealed && !row.host ? (medals[rank++] || "") : "";
       const label = `${medal ? `${medal} ` : ""}${row.name}${row.host ? " \u{1F385} (host)" : ""}`;
       const right = d.revealed
-        ? el("span", { className: "st" }, `\u{1F50D} ${row.detective} \u00b7 \u{1F5FA}\u{FE0F} ${row.map} \u00b7 \u{1F3AD} ${row.stealth + row.map_stealth} = `, el("span", { className: "pts", textContent: `${row.total}` }))
-        : el("span", { className: "st", textContent: row.locked_pins || row.map_locked ? `\u{1F512} ${row.locked_pins}/10 pins \u00b7 \u{1F5FA}\u{FE0F} ${row.map_locked} locked` : "\u{1F50E} still sleuthing" });
+        ? el("span", { className: "st" }, `\u{1F50D} ${row.detective} \u00b7 \u2B55 ${row.map} \u00b7 \u{1F3AD} ${row.stealth + row.map_stealth} = `, el("span", { className: "pts", textContent: `${row.total}` }))
+        : el("span", { className: "st", textContent: row.locked_pins || row.map_locked ? `\u{1F512} ${row.locked_pins}/10 pins \u00b7 \u2B55 ${row.map_locked} locked` : "\u{1F50E} still sleuthing" });
       const face = el("span", { className: "mini-av", textContent: initials(row.name) });
       if (d.avatars && d.avatars[row.name]) face.innerHTML = avatarSVG(d.avatars[row.name]);
       list.append(el("li", { className: row.name === match.g ? "me" : "" }, el("span", {}, face, label), right));
@@ -3137,7 +3137,7 @@
       body.append(
         el("div", { className: "ob-icon", textContent: "\u{1F389}" }),
         el("h3", { id: "obTitle", textContent: "You're all set, detective!" }),
-        el("p", { className: "ob-text", textContent: `Clues about your Santa start on ${fmtDate(sleuth.data.clue_dates[0])}. Pop into the office any time to pin your suspects \u2014 and try cracking everyone else's Santa on the Family Map.` }));
+        el("p", { className: "ob-text", textContent: `Clues about your Santa start on ${fmtDate(sleuth.data.clue_dates[0])}. Pop into the office any time to pin your suspects \u2014 and try cracking everyone else's Santa in the Circle of Santas.` }));
       next("Step into the office \u2192");
     }
   }
